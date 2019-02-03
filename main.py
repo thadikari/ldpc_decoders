@@ -7,7 +7,7 @@ from models import models
 def test(args):
     log = logging.getLogger(args.channel)
     code = codes.get_code(args.code)
-    x = code.cb[-args.codeword]
+    x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     model = models[args.channel]
     min_wec = args.min_wec
     saver = utils.Saver('./', args.channel)

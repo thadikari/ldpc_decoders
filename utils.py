@@ -1,7 +1,11 @@
-import numpy as np
 import argparse
-import json, logging, os
+import json
+import logging
+import os
 import unittest
+
+import numpy as np
+
 import codes
 
 
@@ -43,7 +47,7 @@ class TestCase(unittest.TestCase):
         x_, y_ = np.array(x), np.array(y)
         for decoder in decoders:
             dec = decoder(param, codes.get_code(code))
-            # print(dec, dec.decode(y_))
+            # print(dec, x_, dec.decode(y_))
             self.assertTrue((dec.decode(y_) == x_).all())
             # spa = SPA(param, codes.get_code(code))
             # self.assertTrue((spa.decode(y_) == x_).all())

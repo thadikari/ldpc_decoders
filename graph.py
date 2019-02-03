@@ -18,19 +18,21 @@ def main(args):
         print('No data available for:', args.channel)
         return
 
-    func = np.log if args.xlog else (lambda val: val)
     for code in data.keys():
         code_data = data[code]
         for decoder in code_data.keys():
             pairs = code_data[decoder]
-            pairs_ = list(zip(map(lambda x: func(float(x)), pairs.keys())
-                              , map(np.log, pairs.values())))
+            pairs_ = list(zip(map(lambda x: float(x),
+                                  pairs.keys()), pairs.values()))
             pairs_.sort(key=lambda x: x[0])
             plt.plot(*list(zip(*pairs_)))
 
+    if args.xlog: plt.xscale('log')
     plt.xlabel(('log(%s)' if args.xlog else '%s')
                % x_labels[args.channel])
-    plt.ylabel('log(WER)')
+    plt.yscale('log')
+    plt.ylabel('WER')
+    plt.grid(True, which='both')
     plt.show()
 
 
