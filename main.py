@@ -5,7 +5,7 @@ from models import models
 
 
 def test(args):
-    log = logging.getLogger(args.channel)
+    log = logging.getLogger(args.channel + '|' + args.decoder)
     code = codes.get_code(args.code)
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     model = models[args.channel]
@@ -22,6 +22,7 @@ def test(args):
         tot, wec, wer = 0, 0, 0.
         log_status = lambda: (log.info('WEC: %d, Iter: %d, WER: %f' % (wec, tot, wer)), saver.add(run_id, wer))
         while wec < min_wec:
+            if args.codeword == -1: x = code.cb[np.random.choice(code.cb.shape[0], 1)[0]]
             y = channel.send(x)
             x_hat = decoder.decode(y)
             wec += ~(x == x_hat).all()
