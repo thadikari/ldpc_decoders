@@ -10,7 +10,7 @@ def test(args):
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     model = models[args.channel]
     min_wec = args.min_wec
-    saver = utils.Saver('./', args.channel)
+    saver = utils.Saver(args.data_dir, args.channel)
 
     for param in args.params:
         log.info('Evaluating Code: %s, Channel: %s, Decoder: %s, Parameter: %f' % (
@@ -39,7 +39,7 @@ def main():
     if args.console:
         utils.setup_console_logger(log_level)
     else:
-        utils.setup_file_logger(args.log_dir, 'test', log_level)
+        utils.setup_file_logger(args.data_dir, 'test', log_level)
 
     np.random.seed(0)
     test(args)
