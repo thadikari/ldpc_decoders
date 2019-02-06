@@ -22,8 +22,11 @@ def setup_parser(code_names, channel_names, decoder_names):
                         choices=[-1, 0, 1])
     parser.add_argument('--min-wec', help='min word errors to accumulate', default=200, type=int)
     parser.add_argument('--max-iter', help='max iterations in bp', default=100, type=int)
+    return bind_parser_common(parser)
 
-    parser.add_argument('--log-dir', help='logs directory', default='./')
+
+def bind_parser_common(parser):
+    parser.add_argument('--data-dir', help='data directory', default=os.path.join('..', 'data'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
     parser.add_argument('--console', help='prints log onto console', action='store_true')
     return parser

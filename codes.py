@@ -1,4 +1,5 @@
 import numpy as np
+import os
 
 
 class Code:
@@ -67,7 +68,8 @@ def get_code(name):
 
 def load_parity_mtx(name):
     mtx = np.zeros((600, 1200))
-    with open('%s.txt' % name, 'r') as fp:
+    file_path = os.path.join('.', 'codes', '%s.txt' % name)
+    with open(file_path, 'r') as fp:
         chk_num = 1
         for line in fp:
             for var_num in map(int, line.split()):

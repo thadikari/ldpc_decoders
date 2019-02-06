@@ -3,7 +3,7 @@ import numpy as np
 import argparse
 
 from models import models
-from utils import Saver
+import utils
 import codes
 
 x_labels = {'bsc': 'crossover probability',
@@ -12,7 +12,7 @@ x_labels = {'bsc': 'crossover probability',
 
 
 def main(args):
-    saver = Saver('./', args.channel)
+    saver = utils.Saver(args.data_dir, args.channel)
     data = saver.load(None)
     if data is None:
         print('No data available for:', args.channel)
@@ -42,7 +42,7 @@ def setup_parser(code_names, channel_names, decoder_names):
     parser.add_argument('channel', help='channel', choices=channel_names)
     parser.add_argument('--xlog', help='x-axis in log', action='store_true')
     # parser.add_argument('decoder', help='decoder', choices=decoder_names)
-    return parser
+    return utils.bind_parser_common(parser)
 
 
 if __name__ == "__main__":
