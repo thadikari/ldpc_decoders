@@ -8,13 +8,13 @@ class SPA:
         self.parity_mtx = parity_mtx
 
         [c, n] = self.parity_mtx.shape
-
-        self.var_neigh = tuple(np.transpose(np.nonzero(self.parity_mtx[:, ind])).flatten() for ind in range(n))
+        self.xx, self.yy = np.where(self.parity_mtx)
         self.chk_neigh = tuple(np.transpose(np.nonzero(self.parity_mtx[ind, :])).flatten() for ind in range(c))
 
     def decode(self, y, priors):
 
         [c, n] = self.parity_mtx.shape
+        xx, yy = self.xx, self.yy
 
         var_to_chk = self.parity_mtx @ np.diag(priors)
         chk_to_var = self.parity_mtx * 0.
@@ -55,10 +55,5 @@ class SPA:
                 return x_hat
 
             # var_to_chk
-            for var_ind in range(n):
-                chk_indices = self.var_neigh[var_ind]
-                var_msg_in = chk_to_var[chk_indices, var_ind]
-                tiled = np.tile(var_msg_in, (var_msg_in.shape[0], 1))
-                np.fill_diagonal(tiled, 0.)
-                var_msg_out = tiled.sum(axis=1) + priors[var_ind]
-                var_to_chk[chk_indices, var_ind] = var_msg_out
+            var_in_sum = chk_to_var.sum(axis=0) + priors
+            var_to_chk[xx, yy] = var_in_sum[yy] - chk_to_var[xx, yy]
