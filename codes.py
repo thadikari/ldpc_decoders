@@ -67,7 +67,7 @@ def get_code(name):
 
 
 def load_parity_mtx(name):
-    mtx = np.zeros((600, 1200))
+    mtx = np.zeros((600, 1200), int)
     file_path = os.path.join('.', 'codes', '%s.txt' % name)
     with open(file_path, 'r') as fp:
         chk_num = 1
