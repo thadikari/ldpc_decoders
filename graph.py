@@ -8,7 +8,8 @@ import codes
 
 x_labels = {'bsc': 'crossover probability',
             'bec': 'erasure probability',
-            'biawgn': 'noise variance'}
+            'biawgn': 'E_b/N in dB for E_b=1'}
+lines = {'ML': 'b-', 'SPA': 'g--', 'LP': 'r-.'}
 
 
 def main(args):
@@ -18,20 +19,21 @@ def main(args):
         print('No data available for:', args.channel)
         return
 
-    for code in data.keys():
+    for code in sorted(data.keys()):
         code_data = data[code]
-        for decoder in code_data.keys():
+        for decoder in sorted(code_data.keys()):
             pairs = code_data[decoder]
-            pairs_ = list(zip(map(lambda x: float(x),
-                                  pairs.keys()), pairs.values()))
+            pairs_ = list(zip(map(float, pairs.keys()),
+                              pairs.values()))
             pairs_.sort(key=lambda x: x[0])
-            plt.plot(*list(zip(*pairs_)))
+            plt.plot(*list(zip(*pairs_)), lines[decoder],
+                     linewidth=3, label=decoder)
 
     if args.xlog: plt.xscale('log')
-    plt.xlabel(('log(%s)' if args.xlog else '%s')
-               % x_labels[args.channel])
+    plt.xlabel(x_labels[args.channel])
     plt.yscale('log')
     plt.ylabel('WER')
+    plt.legend(loc='lower right')
     plt.grid(True, which='both')
     plt.show()
 
