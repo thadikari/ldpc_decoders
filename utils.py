@@ -7,6 +7,8 @@ import unittest
 import numpy as np
 
 import codes
+import collections
+import time
 
 
 def setup_parser(code_names, channel_names, decoder_names):
@@ -94,3 +96,47 @@ class Saver:
 
         with open(self.file_path, 'w') as ff:
             json.dump(data, ff)
+
+
+class LoopProfiler:
+    class Tag:
+        def __init__(self, name, line, prof):
+            self.name, self.line, self.prof = name, line, prof
+
+        def elapsed(self):
+            return (time.time() - self.updated) * 1000
+
+        def __enter__(self):
+            self.updated = time.time()
+            extra = '' if self.line is None else ': ' + self.line
+            self.prof.log.debug("(( '" + self.name + "'" + extra)
+            return self
+
+        def __exit__(self, type, value, traceback):
+            elapsed = self.elapsed()
+            self.prof.log.debug('    elapsed[%s] ))' % str(int(elapsed)))
+            self.prof.tags[self.name] = self.prof.tags.get(self.name, 0) + elapsed
+
+    def __init__(self, log, dump_freq):
+        self.log = log
+        self.updated = time.time()
+        self.dump_freq = dump_freq
+        self.tags = collections.OrderedDict()
+        self.step_count = 0
+
+    def __enter__(self):
+        return self
+
+    def start(self, line=None):
+        self.step_count += 1
+        if line is not None: self.log.debug(line)
+        return self
+
+    def tag(self, name, line=None):
+        return LoopProfiler.Tag(name, line, self)
+
+    def __exit__(self, typ, value, traceback):
+        if self.dump_freq > 0 and self.step_count % self.dump_freq == 0:
+            summary = ', '.join(["'%s':%d" % (key, int(val)) for key, val in self.tags.items()])
+            self.log.info('Summary at[%d] for[%d]: [' % (self.step_count, self.dump_freq) + summary + ']')
+            for key in self.tags: self.tags[key] = 0
