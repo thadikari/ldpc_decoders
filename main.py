@@ -2,6 +2,7 @@ import numpy as np
 import logging
 import utils, codes
 from models import models
+import time
 
 
 def test(args):
@@ -20,6 +21,7 @@ def test(args):
         channel = model.Channel(param)
         decoder = getattr(model, args.decoder)(param, code)
         tot, wec, wer = 0, 0, 0.
+        start_time = time.time()
         log_status = lambda: (log.info('WEC: %d, Iter: %d, WER: %f' % (wec, tot, wer)), saver.add(run_id, wer))
         while wec < min_wec:
             if args.codeword == -1: x = code.cb[np.random.choice(code.cb.shape[0], 1)[0]]
@@ -28,7 +30,9 @@ def test(args):
             wec += ~(x == x_hat).all()
             tot += 1
             wer = wec / tot
-            if tot % 1e6 == 0: log_status()
+            if time.time() - start_time > args.log_freq:
+                start_time = time.time()
+                log_status()
 
         log_status()
 
