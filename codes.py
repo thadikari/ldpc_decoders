@@ -1,4 +1,5 @@
 import numpy as np
+import argparse
 import os
 
 
@@ -17,6 +18,10 @@ class Code:
             assert (self.cb[0].sum() == 0)  # all zeros cw
             # assert (self.cb[-1].sum() == n)  # all ones cw
             # print(cb)
+
+    def get_k(self): return self.get_n() - self.parity_mtx.shape[0]
+
+    def get_n(self): return self.parity_mtx.shape[1]
 
 
 codes = {'4_2_test': (np.array([[1, 1, 1, 0, 0],  # gen_mtx
@@ -53,17 +58,22 @@ codes = {'4_2_test': (np.array([[1, 1, 1, 0, 0],  # gen_mtx
          }
 
 file_codes_dir = os.path.join('..', 'codes')
-file_list = next(os.walk(file_codes_dir))[2]
-file_code_list = list(map(lambda x: os.path.splitext(x)[0], file_list))
-file_code_map = dict(zip(file_code_list, file_list))
+
+
+def get_file_code_map():
+    file_list = next(os.walk(file_codes_dir))[2]
+    file_code_list = list(map(lambda x: os.path.splitext(x)[0], file_list))
+    file_code_map = dict(zip(file_code_list, file_list))
+    return file_code_map
 
 
 def get_code_names():
-    return list(codes.keys()) + file_code_list
+    return list(codes.keys()) + list(get_file_code_map().keys())
 
 
 def get_code(name):
-    if name in file_code_list:
+    file_code_map = get_file_code_map()
+    if name in get_file_code_map().keys():
         file_path = os.path.join(file_codes_dir, file_code_map[name])
         return Code(None, load_parity_mtx(file_path))
     else:
@@ -106,26 +116,35 @@ def rand_reg_ldpc_test():
     print(xx[xx[:, 0].argsort()])
 
 
-def gen_rand_reg_ldpc():
-    n, l, r = 512, 3, 6
-    for i in range(1):
+def gen_rand_reg_ldpc(args):
+    n, l, r = args.n, args.l, args.r
+    for i in range(args.count):
         parity_mtx = rand_reg_ldpc(n, l, r)
-        file_path = os.path.join(file_codes_dir,
-                                 '%d_%d_%d_rand_ldpc_%d.txt'
-                                 % (n, l, r, i + 1))
+        code_name = '%d_%d_%d_rand_ldpc_%d' % (n, l, r, i + 1)
+        file_path = os.path.join(file_codes_dir, '%s.txt' % code_name)
         with open(file_path, 'w') as fp:
             for chk_ind in range(parity_mtx.shape[0]):
                 ind = np.where(parity_mtx[chk_ind, :])[0] + 1
                 fp.writelines(' '.join(map(str, ind)) + '\n')
 
+        verify_rand_reg_ldpc(code_name, l, r)
 
-def verify_rand_reg_ldpc():
-    parity_mtx = get_code('512_3_6_ldpc_1').parity_mtx
+
+def verify_rand_reg_ldpc(code_name, l, r):
+    parity_mtx = get_code(code_name).parity_mtx
     print(parity_mtx.shape,
-          (parity_mtx.sum(axis=0) == 3).all(),
-          (parity_mtx.sum(axis=1) == 6).all())
+          (parity_mtx.sum(axis=0) == l).all(),
+          (parity_mtx.sum(axis=1) == r).all())
+
+
+def setup_parser():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('count', help='number of random codes to generate', type=int)
+    parser.add_argument('n', help='regular ldpc code length', type=int)
+    parser.add_argument('l', help='l', type=int)
+    parser.add_argument('r', help='r', type=int)
+    return parser
 
 
 if __name__ == "__main__":
-    # gen_rand_reg_ldpc()
-    verify_rand_reg_ldpc()
+    gen_rand_reg_ldpc(setup_parser().parse_args())

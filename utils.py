@@ -18,12 +18,12 @@ def setup_parser(code_names, channel_names, decoder_names):
     parser.add_argument('channel', help='channel', choices=channel_names)
     parser.add_argument('decoder', help='decoder', choices=decoder_names)
 
-    parser.add_argument('--params', nargs='+', type=float, default=[.1, .01, .001, .0001])
+    parser.add_argument('--params', nargs='+', type=float, default=[.1, .01])
 
     parser.add_argument('--codeword', help='-1:random from cb, 0:all-zero, 1:all-ones', default=0, type=int,
                         choices=[-1, 0, 1])
-    parser.add_argument('--min-wec', help='min word errors to accumulate', default=200, type=int)
-    parser.add_argument('--max-iter', help='max iterations in bp', default=100, type=int)
+    parser.add_argument('--min-wec', help='min word errors to accumulate', default=100, type=int)
+    parser.add_argument('--max-iter', help='max iterations in bp', default=10, type=int)
     parser.add_argument('--log-freq', help='log frequency in seconds', default=2., type=float)
     return bind_parser_common(parser)
 
