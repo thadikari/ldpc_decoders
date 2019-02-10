@@ -6,18 +6,18 @@ import time
 
 
 def test(args):
-    log = logging.getLogger(args.channel + '|' + args.decoder)
+    id_keys = ('channel', 'code', 'decoder')
+    id_val = tuple(vars(args)[key] for key in id_keys)
+    log = logging.getLogger('.'.join(id_val))
     code = codes.get_code(args.code)
     code_n = code.get_n()
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     model = models[args.channel]
     min_wec = args.min_wec
-    saver = utils.Saver(args.data_dir, args.channel)
+    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
 
     for param in args.params:
-        log.info('Evaluating Code: %s, Channel: %s, Decoder: %s, Parameter: %f' % (
-            args.code, args.channel, args.decoder, param))
-        run_id = [args.code, args.decoder, param]
+        log.info('Starting parameter: %f' % param)
 
         channel = model.Channel(param)
         decoder = getattr(model, args.decoder)(param, code)
@@ -27,7 +27,7 @@ def test(args):
         def log_status():
             log.info('Iter: %d, WEC: %d, WER: %f, BEC: %d, BER: %f'
                      % (tot, wec, wer, bec, ber))
-            saver.add(run_id, wer)
+            saver.add(param, wer, ber)
 
         while wec < min_wec:
             if args.codeword == -1: x = code.cb[np.random.choice(code.cb.shape[0], 1)[0]]

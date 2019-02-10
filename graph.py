@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import argparse
+import logging
+import os
 
 from models import models
 import utils
@@ -12,24 +13,32 @@ x_labels = {'bsc': 'crossover probability',
 lines = {'ML': 'b-', 'SPA': 'g--', 'LP': 'r-.'}
 
 
-def main(args):
-    saver = utils.Saver(args.data_dir, args.channel)
-    data = saver.load(None)
-    if data is None:
-        print('No data available for:', args.channel)
-        return
+def is_valid(data, args):
+    if data is None: return 0
+    if data.get('channel', '') != args.channel: return 0
+    if data.get('code', '') != args.code: return 0
+    if data.get('decoder', '') not in args.decoder: return 0
+    return 1
 
-    for code in sorted(data.keys()):
-        code_data = data[code]
-        for decoder in sorted(code_data.keys()):
-            pairs = code_data[decoder]
+
+def main(args):
+    log = logging.getLogger()
+    file_list = tuple(it for it in next(os.walk(args.data_dir))[2]
+                      if os.path.splitext(it)[1] == '.json')
+
+    for file_name in file_list:
+        data = utils.load_json(os.path.join(args.data_dir, file_name))
+        if is_valid(data, args):
+            log.info('file: %s' % file_name)
+            decoder = data['decoder']
+            # if args.wer:
+            pairs = data['wer']
             pairs_ = list(zip(map(float, pairs.keys()),
                               pairs.values()))
             pairs_.sort(key=lambda x: x[0])
             plt.plot(*list(zip(*pairs_)), lines[decoder],
                      linewidth=3, label=decoder)
 
-    if args.xlog: plt.xscale('log')
     plt.xlabel(x_labels[args.channel])
     plt.yscale('log')
     plt.ylabel('WER')
@@ -40,12 +49,17 @@ def main(args):
 
 def setup_parser(code_names, channel_names, decoder_names):
     parser = argparse.ArgumentParser()
-    # parser.add_argument('code', help='code', choices=code_names)
     parser.add_argument('channel', help='channel', choices=channel_names)
-    parser.add_argument('--xlog', help='x-axis in log', action='store_true')
-    # parser.add_argument('decoder', help='decoder', choices=decoder_names)
+    parser.add_argument('code', help='code', choices=code_names)
+    # parser.add_argument('--xlog', help='x-axis in log', action='store_true')
+    parser.add_argument('decoder', help='decoder', nargs='+', default=['SPA'], choices=decoder_names)
+
+    parser.add_argument('--wer', help='plot wer', action='store_true')
+    parser.add_argument('--ber', help='plot ber', action='store_true')
+
     return utils.bind_parser_common(parser)
 
 
 if __name__ == "__main__":
+    utils.setup_console_logger()
     main(setup_parser(codes.get_code_names(), models.keys(), ['ML', 'SPA']).parse_args())

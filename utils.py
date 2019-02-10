@@ -9,13 +9,14 @@ import numpy as np
 import codes
 import collections
 import time
+import collections
 
 
 def setup_parser(code_names, channel_names, decoder_names):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('code', help='code', choices=code_names)
     parser.add_argument('channel', help='channel', choices=channel_names)
+    parser.add_argument('code', help='code', choices=code_names)
     parser.add_argument('decoder', help='decoder', choices=decoder_names)
 
     parser.add_argument('--params', nargs='+', type=float, default=[.1, .01])
@@ -72,21 +73,37 @@ def arg_max_rand(values):
     return np.random.choice(max_ind.flatten(), 1)[0]
 
 
+def load_json(file_path):
+    try:
+        ff = open(file_path, 'r')
+        data = json.load(ff, object_pairs_hook=collections.OrderedDict)
+        ff.close()
+    except:
+        data = None
+        print('Error loading: %s' % file_path)
+    finally:
+        return data
+
+
 class Saver:
-    def __init__(self, dir_path, file_name):
+    def __init__(self, data_dir, run_ids):
+        self.dict = collections.OrderedDict(run_ids)
+        dir_path, file_name = data_dir, '-'.join(self.dict.values())
         self.file_path = os.path.join(dir_path, '%s.json' % file_name)
 
-    def load(self, default):
-        try:
-            ff = open(self.file_path, 'r')
-            data = json.load(ff)
-            ff.close()
-        except:
-            data = default
-        finally:
-            return data
+    def add(self, param, wer, ber):
+        data = load_json(self.file_path)
+        if data is None:
+            data = collections.OrderedDict()
+            for key in self.dict: data[key] = self.dict[key]
+            data['wer'], data['ber'] = {}, {}
 
-    def add(self, run_id, val):
+        data['wer'][str(param)] = wer
+        data['ber'][str(param)] = ber
+        with open(self.file_path, 'w') as fp:
+            json.dump(data, fp, indent=4)
+
+    def add_deprecated(self, run_id, val):
         data = self.load({})
         temp = data
         for key in run_id[0:-1]:
