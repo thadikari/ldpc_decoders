@@ -3,6 +3,7 @@ import logging
 import utils, codes
 from models import models
 import time
+from collections import OrderedDict
 
 
 def test(args):
@@ -14,7 +15,7 @@ def test(args):
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     model = models[args.channel]
     min_wec = args.min_wec
-    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
+    saver = utils.Saver(args.output_dir, list(zip(id_keys, id_val)))
 
     for param in args.params:
         log.info('Starting parameter: %f' % param)
@@ -25,9 +26,10 @@ def test(args):
         start_time = time.time()
 
         def log_status():
-            log.info('Iter: %d, WEC: %d, WER: %f, BEC: %d, BER: %f'
-                     % (tot, wec, wer, bec, ber))
-            saver.add(param, wer, ber)
+            val_dict = OrderedDict(zip(('tot', 'wec', 'wer', 'bec', 'ber'),
+                                       (tot, wec, wer, bec, ber)))
+            log.info(', '.join(('%s:%s' % (key.upper(), val_dict[key]) for key in val_dict)))
+            saver.add(param, val_dict)
 
         while wec < min_wec:
             if args.codeword == -1: x = code.cb[np.random.choice(code.cb.shape[0], 1)[0]]
