@@ -15,7 +15,7 @@ def test(args):
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     model = models[args.channel]
     min_wec = args.min_wec
-    saver = utils.Saver(args.output_dir, list(zip(id_keys, id_val)))
+    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
 
     for param in args.params:
         log.info('Starting parameter: %f' % param)
@@ -45,10 +45,11 @@ def test(args):
                 log_status()
 
         log_status()
+    log.info('Done!')
 
 
 def main():
-    args = utils.setup_parser(codes.get_code_names(), models.keys(), ['ML', 'SPA']).parse_args()
+    args = utils.setup_parser(codes.get_code_names(), models.keys(), utils.decoder_names).parse_args()
     log_level = logging.DEBUG if args.debug else logging.INFO
     if args.console:
         utils.setup_console_logger(log_level)

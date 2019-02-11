@@ -10,6 +10,8 @@ import codes
 from collections import OrderedDict
 import time
 
+decoder_names = ['ML', 'SPA']
+
 
 def setup_parser(code_names, channel_names, decoder_names):
     parser = argparse.ArgumentParser()
@@ -29,7 +31,7 @@ def setup_parser(code_names, channel_names, decoder_names):
 
 
 def bind_parser_common(parser):
-    parser.add_argument('--output-dir', help='output directory', default=os.path.join('..', 'temp'))
+    parser.add_argument('--data-dir', help='data directory', default=os.path.join('..', 'temp'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
     parser.add_argument('--console', help='prints log onto console', action='store_true')
     return parser
@@ -72,6 +74,10 @@ def arg_max_rand(values):
     return np.random.choice(max_ind.flatten(), 1)[0]
 
 
+get_data_file_list = lambda data_dir: tuple(it for it in next(os.walk(data_dir))[2]
+                                            if os.path.splitext(it)[1] == '.json')
+
+
 def load_json(file_path):
     try:
         ff = open(file_path, 'r')
@@ -90,6 +96,9 @@ class Saver:
         dir_path, file_name = data_dir, '-'.join(self.dict.values())
         self.file_path = os.path.join(dir_path, '%s.json' % file_name)
 
+    def add_meta(self, key, val):
+        self.dict[key] = val
+
     def add(self, param, val_dict):
         data = load_json(self.file_path)
         if data is None:
@@ -98,9 +107,16 @@ class Saver:
             for key in val_dict: data[key] = {}
 
         for key in val_dict: data[key][str(param)] = float(val_dict[key])
+        self.write_(data)
 
+    def write_(self, data):
         with open(self.file_path, 'w') as fp:
             json.dump(data, fp, indent=4)
+
+    def add_all(self, val_dict):
+        z = self.dict.copy()
+        z.update(val_dict)
+        self.write_(z)
 
     def add_deprecated(self, run_id, val):
         data = self.load({})
