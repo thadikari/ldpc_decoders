@@ -21,7 +21,7 @@ def test(args):
         log.info('Starting parameter: %f' % param)
 
         channel = model.Channel(param)
-        decoder = getattr(model, args.decoder)(param, code)
+        decoder = getattr(model, args.decoder)(param, code, args.max_iter)
         tot, wec, wer, bec, ber = 0, 0, 0., 0, 0.
         start_time = time.time()
 

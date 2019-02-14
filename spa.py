@@ -2,8 +2,8 @@ import numpy as np
 
 
 class SPA:
-    def __init__(self, parity_mtx):
-        self.max_iter = 100
+    def __init__(self, parity_mtx, max_iter):
+        self.max_iter = max_iter
         self.parity_mtx = parity_mtx
         self.xx, self.yy = np.where(self.parity_mtx)
         self.xy = (self.xx, self.yy)

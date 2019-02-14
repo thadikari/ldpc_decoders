@@ -51,10 +51,10 @@ def setup_file_logger(path, name, level=logging.DEBUG):
 
 
 class TestCase(unittest.TestCase):
-    def sample(self, code, param, decoders, x, y):
+    def sample(self, code, param, decoders, max_iter, x, y):
         x_, y_ = np.array(x), np.array(y)
         for decoder in decoders:
-            dec = decoder(param, codes.get_code(code))
+            dec = decoder(param, codes.get_code(code), max_iter)
             # print(dec, x_, dec.decode(y_))
             self.assertTrue((dec.decode(y_) == x_).all())
             # spa = SPA(param, codes.get_code(code))

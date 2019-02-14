@@ -14,8 +14,8 @@ class Channel:
 
 
 class SPA:
-    def __init__(self, snr_in_db, code):
-        self.spa = spa.SPA(code.parity_mtx)
+    def __init__(self, snr_in_db, code, max_iter):
+        self.spa = spa.SPA(code.parity_mtx, max_iter)
         self.noise_var = noise_var(snr_in_db)
 
     def decode(self, y):  # incoming cw \reals, outgoing cw {0,1}
@@ -25,7 +25,7 @@ class SPA:
 
 
 class ML:
-    def __init__(self, snr_in_db, code):
+    def __init__(self, snr_in_db, code, max_iter):
         # map {0,1} to {-1,+1}
         self.cb = code.cb
         self.noise_var = noise_var(snr_in_db)

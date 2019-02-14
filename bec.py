@@ -14,7 +14,7 @@ class Channel:
 
 
 class ML:
-    def __init__(self, p, code):
+    def __init__(self, p, code, max_iter):
         self.log_p, self.log_1p = np.log(p), np.log(1 - p)
         self.cb = code.cb
         self.n = self.cb.shape[1]
@@ -30,8 +30,8 @@ class ML:
 
 
 class SPA:
-    def __init__(self, p, code):
-        self.max_iter = 100
+    def __init__(self, p, code, max_iter):
+        self.max_iter = max_iter
         self.symbols = np.array([-1, 1, 0])
         self.parity_mtx = ma.masked_array(code.parity_mtx.astype(int),
                                           mask=~code.parity_mtx.astype(bool))
@@ -48,11 +48,13 @@ class SPA:
         iter_count = 0
         x_hat = y
 
+        def ret(reason):
+            # print(reason, ':', iter_count)
+            return x_hat
+
         while 1:
             iter_count += 1
-            if iter_count > self.max_iter:
-                # print('max reached', y.sum(), x_hat.sum())
-                return x_hat
+            if iter_count >= self.max_iter: return ret('maximum')
 
             # chk_to_var
             sums = (self.parity_mtx - np.abs(var_to_chk)).sum(axis=1)
@@ -65,8 +67,10 @@ class SPA:
 
             # check if no erasures anymore
             marginal = np.sign(priors + chk_to_var.sum(axis=0))
-            x_hat = np.array([2, 1, 0])[marginal]
-            if np.sum(x_hat == 2) == 0: return x_hat
+            x_new = np.array([2, 1, 0])[marginal]
+            if (x_hat == x_new).all(): return ret('stopping')  # check if a stopping set
+            x_hat = x_new
+            if np.sum(x_hat == 2) == 0:  return ret('decoded')
 
             # var_to_chk
             var_in_sum = chk_to_var.sum(axis=0) + priors
@@ -76,10 +80,10 @@ class SPA:
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, SPA]
-        self.sample('4_2_test', 1 / 3, decoders,
+        self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 2, 0, 1, 2])
-        self.sample('7_4_hamming', .1, decoders,
+        self.sample('7_4_hamming', .1, decoders, 10,
                     [1, 0, 0, 1, 1, 0, 0],
                     [2, 0, 2, 1, 1, 0, 2])
 
