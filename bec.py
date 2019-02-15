@@ -1,6 +1,6 @@
+from scipy.sparse import coo_matrix
 import numpy as np
 import utils
-import numpy.ma as ma
 
 
 class Channel:
@@ -32,49 +32,55 @@ class ML:
 class SPA:
     def __init__(self, p, code, max_iter):
         self.max_iter = max_iter
-        self.symbols = np.array([-1, 1, 0])
-        self.parity_mtx = ma.masked_array(code.parity_mtx.astype(int),
-                                          mask=~code.parity_mtx.astype(bool))
-        self.xx, self.yy = np.where(self.parity_mtx)
-        self.xy = (self.xx, self.yy)
+        self.symbols = np.array([2, 1, 0])  # 2 means erasure
+        self.messages = np.array([-1, 1, 0])  # 0 WP1, 1 WP1, 0 OR 1 WP0.5
+        self.xx, self.yy = np.where(code.parity_mtx)
+
+        coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=code.parity_mtx.shape)
+        sum_axis = lambda d_, ax: np.asarray(coo(d_).sum(axis=ax)).flatten()
+        self.sum_rows = lambda d_: sum_axis(d_, 1)
+        self.sum_cols = lambda d_: sum_axis(d_, 0)
 
     def decode(self, y):
-        xx, yy, xy = self.xx, self.yy, self.xy
-        priors = self.symbols[y]
-        chk_to_var = self.parity_mtx + 0
-        var_to_chk = self.parity_mtx + 0
-        var_to_chk[xy] = priors[yy]
+        xx, yy = self.xx, self.yy
+        priors = self.messages[y]
+        var_to_chk, chk_to_var = priors[yy] * 1, priors[yy] * 0
+        sum_rows, sum_cols = self.sum_rows, self.sum_cols
 
-        iter_count = 0
-        x_hat = y
+        x_hat, iter_count = y, 0
 
-        def ret(reason):
-            # print(reason, ':', iter_count)
+        def ret(val):
+            # print(val, ':', iter_count)
             return x_hat
 
         while 1:
             iter_count += 1
             if iter_count >= self.max_iter: return ret('maximum')
+            if np.sum(x_hat == 2) == 0: return ret('decoded')  # no erasures
 
             # chk_to_var
-            sums = (self.parity_mtx - np.abs(var_to_chk)).sum(axis=1)
-            chk_to_var.data[sums > 1, :] = 0  # more than 1 erasures
-            ind1 = sums == 1
-            sums1 = np.abs(var_to_chk[ind1, :])
-            sums2 = 2 * ((var_to_chk[ind1, :] > 0).astype(int).sum(axis=1) % 2) - 1
-            chk_to_var.data[ind1, :] = (1 - sums1) * sums2[:, None]
-            chk_to_var.data[sums == 0, :] = var_to_chk.data[sums == 0, :]
+            sums = sum_rows(1 - np.abs(var_to_chk))  # number of erasures per check
+            ma_0, ma_1, ma_2 = (sums == 0)[xx], (sums == 1)[xx], (sums > 1)[xx]
 
-            # check if no erasures anymore
-            marginal = np.sign(priors + chk_to_var.sum(axis=0))
-            x_new = np.array([2, 1, 0])[marginal]
-            if (x_hat == x_new).all(): return ret('stopping')  # check if a stopping set
-            x_hat = x_new
-            if np.sum(x_hat == 2) == 0:  return ret('decoded')
+            # checks with no erasures, retain existing certainty for all variables
+            # checks with more than 1 erasures, uncertain about all variables
+            chk_to_var[ma_0], chk_to_var[ma_2] = var_to_chk[ma_0], 0.
+
+            # erased_pos=0 at 'the' erased position, 1 otherwise
+            erased_pos = np.abs(var_to_chk[ma_1])
+            # sum up what other vars are suggesting (for bec there cannot be any conflicts)
+            incoming = sum_rows(var_to_chk > 0)[xx][ma_1]
+            # checks with 1 erasure, uncertain about all variables expect the erased
+            chk_to_var[ma_1] = (1 - erased_pos) * (2 * (incoming % 2) - 1)
 
             # var_to_chk
-            var_in_sum = chk_to_var.sum(axis=0) + priors
-            var_to_chk.data[xy] = np.sign(var_in_sum[yy] - chk_to_var[xy])
+            marginal = priors + sum_cols(chk_to_var)
+            var_to_chk = np.sign(marginal[yy] - chk_to_var, out=var_to_chk)
+
+            # bitwise decoding
+            x_new = self.symbols[np.sign(marginal)]
+            if (x_hat == x_new).all(): return ret('stopping')  # stopping set
+            x_hat = x_new
 
 
 class Test(utils.TestCase):
