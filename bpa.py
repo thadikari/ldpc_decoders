@@ -37,3 +37,6 @@ class SPA:
             # var_to_chk
             var_in_sum = chk_to_var.sum(axis=0) + priors
             var_to_chk[xy] = var_in_sum[yy] - chk_to_var[xy]
+
+
+class MSA(SPA): pass

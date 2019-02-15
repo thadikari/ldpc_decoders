@@ -1,6 +1,6 @@
 import numpy as np
 import utils
-import spa
+import bpa
 
 
 class Channel:
@@ -11,18 +11,26 @@ class Channel:
         return (x + (np.random.random(x.shape) < self.p)) % 2
 
 
-class SPA:
-    def __init__(self, p, code):
-        self.spa = spa.SPA(code.parity_mtx)
-        self.llr = np.log(1 - p) - np.log(p)
+class BPA:
+    def __init__(self, p, dec):
+        self.llr, self.dec = np.log(1 - p) - np.log(p), dec
 
     def decode(self, y):
-        priors = self.llr * (1 - 2 * y)
-        return self.spa.decode(y, priors)
+        return self.dec.decode(y, self.llr * (1 - 2 * y))
+
+
+class SPA(BPA):
+    def __init__(self, p, code, max_iter):
+        super().__init__(p, bpa.SPA(code.parity_mtx, max_iter))
+
+
+class MSA(BPA):
+    def __init__(self, p, code, max_iter):
+        super().__init__(p, bpa.MSA(code.parity_mtx, max_iter))
 
 
 class ML:
-    def __init__(self, p, code):
+    def __init__(self, p, code, max_iter):
         self.log_p, self.log_1p = np.log(p), np.log(1 - p)
         self.cb = code.cb
 
@@ -37,10 +45,10 @@ class ML:
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, SPA]
-        self.sample('4_2_test', 1 / 3, decoders,
+        self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 0, 0, 1, 1])
-        self.sample('7_4_hamming', .1, decoders,
+        self.sample('7_4_hamming', .1, decoders, 10,
                     [1, 0, 0, 1, 1, 0, 0],
                     [1, 0, 1, 1, 1, 0, 0])
         # .2 will fail as it doesn't have enough

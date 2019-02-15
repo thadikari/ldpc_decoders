@@ -83,6 +83,9 @@ class SPA:
             iter_count += 1
 
 
+class MSA(SPA): pass
+
+
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, SPA]

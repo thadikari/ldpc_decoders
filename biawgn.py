@@ -1,6 +1,6 @@
 import numpy as np
 import utils
-import spa
+import bpa
 
 noise_var = lambda snr_in_db: 10 ** (-snr_in_db / 10)
 
@@ -13,15 +13,23 @@ class Channel:
         return (2 * x - 1) + np.random.normal(0, self.std_dev, x.shape)
 
 
-class SPA:
-    def __init__(self, snr_in_db, code, max_iter):
-        self.spa = spa.SPA(code.parity_mtx, max_iter)
-        self.noise_var = noise_var(snr_in_db)
+class BPA:
+    def __init__(self, snr_in_db, dec):
+        self.noise_var, self.dec = noise_var(snr_in_db), dec
 
     def decode(self, y):  # incoming cw \reals, outgoing cw {0,1}
         # http://dde.binghamton.edu/filler/mct/lectures/25/mct-lect25-bawgnc.pdf
-        priors = -2 * y / self.noise_var
-        return self.spa.decode(y, priors)
+        return self.dec.decode(y, -2 * y / self.noise_var)
+
+
+class SPA(BPA):
+    def __init__(self, snr_in_db, code, max_iter):
+        super().__init__(snr_in_db, bpa.SPA(code.parity_mtx, max_iter))
+
+
+class MSA(BPA):
+    def __init__(self, snr_in_db, code, max_iter):
+        super().__init__(snr_in_db, bpa.MSA(code.parity_mtx, max_iter))
 
 
 class ML:
