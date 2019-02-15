@@ -26,7 +26,7 @@ def setup_parser(code_names, channel_names, decoder_names):
                         choices=[-1, 0, 1])
     parser.add_argument('--min-wec', help='min word errors to accumulate', default=100, type=int)
     parser.add_argument('--max-iter', help='max iterations in bp', default=10, type=int)
-    parser.add_argument('--log-freq', help='log frequency in seconds', default=2., type=float)
+    parser.add_argument('--log-freq', help='log frequency in seconds', default=5., type=float)
     return bind_parser_common(parser)
 
 

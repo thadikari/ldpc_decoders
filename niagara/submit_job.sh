@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=02:30:00
+#SBATCH --time=12:00:00
 #SBATCH --account=def-sdraper
 #SBATCH --array=1
 #SBATCH --nodes=1
@@ -29,6 +29,8 @@ echo 'executing srun'
 #python main.py bec 1200_3_6_rand_ldpc_$SLURM_ARRAY_TASK_ID SPA --codeword=0 --data-dir=$SCRATCH --params .5 .475 .45 .425 .4 .375 .35 .325 .3 .275 .25 .225 .2 .175 .15 .125 .1
 
 for i in `seq 1 10`; do python main.py bec 1200_3_6_rand_ldpc_$i SPA --codeword=0 --data-dir=$SCRATCH --params .5 .475 .45 .425 .4 .375 .35 .325 .3 .275 .25 .225 .2 .175 .15 .125 .1 & done
+
+for i in 1 2 3 4 6 8 10 14 18 22 28 34 40 50 60 70 80 90 100 120 140 160 180 200; do python main.py bec 1200_3_6_ldpc SPA --codeword=1 --data-dir=$SCRATCH --max-iter=$i --params .5 .475 .45 .425 .4 .375 .35 .325 .3 .275 .25 .225 .2 .175 .15 .125 .1 & done
 
 wait
 echo 'done srun!'

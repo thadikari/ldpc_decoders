@@ -54,7 +54,6 @@ class SPA:
             return x_hat
 
         while 1:
-            iter_count += 1
             if iter_count >= self.max_iter: return ret('maximum')
             if np.sum(x_hat == 2) == 0: return ret('decoded')  # no erasures
 
@@ -81,6 +80,7 @@ class SPA:
             x_new = self.symbols[np.sign(marginal)]
             if (x_hat == x_new).all(): return ret('stopping')  # stopping set
             x_hat = x_new
+            iter_count += 1
 
 
 class Test(utils.TestCase):

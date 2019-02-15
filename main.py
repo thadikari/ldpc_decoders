@@ -7,8 +7,8 @@ from collections import OrderedDict
 
 
 def test(args):
-    id_keys = ('channel', 'code', 'decoder')
-    id_val = tuple(vars(args)[key] for key in id_keys)
+    id_keys = ('channel', 'code', 'decoder', 'max_iter')
+    id_val = tuple(str(vars(args)[key]) for key in id_keys)
     log = logging.getLogger('.'.join(id_val))
     code = codes.get_code(args.code)
     code_n = code.get_n()
