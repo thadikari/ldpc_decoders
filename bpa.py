@@ -1,3 +1,5 @@
+from scipy.sparse import coo_matrix
+import sparse_utils as su
 import numpy as np
 
 
@@ -6,37 +8,37 @@ class SPA:
         self.max_iter = max_iter
         self.parity_mtx = parity_mtx
         self.xx, self.yy = np.where(self.parity_mtx)
-        self.xy = (self.xx, self.yy)
+
+        coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=parity_mtx.shape)
+        self.prod_rows = lambda d_: su.prod_nonzero(coo(d_), 1)
+        self.sum_cols = lambda d_: su.sum_axis(coo(d_), 0)
 
     def decode(self, y, priors):
+        xx, yy = self.xx, self.yy
+        prod_rows, sum_cols = self.prod_rows, self.sum_cols
+        var_to_chk, chk_to_var = priors[yy], None
+        x_hat, iter_count = y, 0
 
-        xx, yy, xy = self.xx, self.yy, self.xy
-        var_to_chk = self.parity_mtx @ np.diag(priors)
-        chk_to_var = self.parity_mtx * 0.
-
-        iter_count = 0
-        x_hat = y
+        def ret(val):
+            # print(val, ':', iter_count)
+            return x_hat
 
         while 1:
-            iter_count += 1
-            if iter_count > self.max_iter:
-                print('max reached', y.sum(), x_hat.sum())
-                return x_hat
+            if iter_count >= self.max_iter: return ret('maximum')
+            if ((self.parity_mtx @ x_hat) % 2 == 0).all(): return ret('decoded')
 
             # chk_to_var
-            chk_msg = np.ones_like(self.parity_mtx, float)
-            tanned = np.tanh(var_to_chk[xy] / 2.)
-            chk_msg[xy] = tanned
-            chk_msg_prod = chk_msg.prod(axis=1)
-            chk_to_var[xy] = 2 * np.arctanh(chk_msg_prod[xx] / tanned)
-
-            # check if a codeword
-            x_hat = ((priors + chk_to_var.sum(axis=0)) < 0).astype(int)
-            if not ((self.parity_mtx @ x_hat) % 2).any(): return x_hat
+            tanned = np.tanh(var_to_chk / 2.)
+            chk_msg_prod = prod_rows(tanned)
+            chk_to_var = 2 * np.arctanh(chk_msg_prod[xx] / tanned)
 
             # var_to_chk
-            var_in_sum = chk_to_var.sum(axis=0) + priors
-            var_to_chk[xy] = var_in_sum[yy] - chk_to_var[xy]
+            marginal = priors + sum_cols(chk_to_var)
+            var_to_chk = marginal[yy] - chk_to_var
+
+            # bitwise decoding
+            x_hat = (marginal < 0).astype(int)
+            iter_count += 1
 
 
 class MSA(SPA): pass
