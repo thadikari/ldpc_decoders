@@ -1,5 +1,5 @@
 from scipy.sparse import coo_matrix
-import sparse_utils as su
+import math_utils as mu
 import numpy as np
 
 
@@ -10,8 +10,8 @@ class SPA:
         self.xx, self.yy = np.where(self.parity_mtx)
 
         coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=parity_mtx.shape)
-        self.prod_rows = lambda d_: su.prod_nonzero(coo(d_), 1)
-        self.sum_cols = lambda d_: su.sum_axis(coo(d_), 0)
+        self.prod_rows = lambda d_: mu.prod_nonzero(coo(d_), 1)
+        self.sum_cols = lambda d_: mu.sum_axis(coo(d_), 0)
 
     def decode(self, y, priors):
         xx, yy = self.xx, self.yy

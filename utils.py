@@ -61,19 +61,6 @@ class TestCase(unittest.TestCase):
             # self.assertTrue((spa.decode(y_) == x_).all())
 
 
-def log_sum_exp_rows(arr):
-    arr_max = arr.max(axis=1)
-    return arr_max + np.log(np.exp(arr - arr_max[:, None]).sum(axis=1))
-    # sum_terms_1 = np.array([[1, 2, 3], [6, -1, -6]])
-    # print(sum_terms_1)
-    # print(log_sum_exp_rows(sum_terms_1))
-
-
-def arg_max_rand(values):
-    max_ind = np.argwhere(values == np.max(values))
-    return np.random.choice(max_ind.flatten(), 1)[0]
-
-
 get_data_file_list = lambda data_dir: tuple(it for it in next(os.walk(data_dir))[2]
                                             if os.path.splitext(it)[1] == '.json')
 

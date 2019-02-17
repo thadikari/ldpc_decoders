@@ -1,4 +1,5 @@
 import numpy as np
+import math_utils as mu
 import utils
 import bpa
 
@@ -38,7 +39,7 @@ class ML:
         num_agrees = np.sum(self.cb == y, axis=1)
         num_diffs = self.cb.shape[1] - num_agrees
         log_prob = num_diffs * self.log_p + num_agrees * self.log_1p
-        ind = utils.arg_max_rand(log_prob)
+        ind = mu.arg_max_rand(log_prob)
         return self.cb[ind]
 
 

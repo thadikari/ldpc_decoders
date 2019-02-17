@@ -1,4 +1,5 @@
 from scipy.sparse import coo_matrix
+import math_utils as mu
 import numpy as np
 import utils
 
@@ -25,7 +26,7 @@ class ML:
         num_diffs = self.n - num_agrees - num_erasures
         log_prob = num_erasures * self.log_p + num_agrees * self.log_1p
         log_prob[num_diffs > 0] = np.NINF  # CWs that don't match have NINF log likelihood
-        ind = utils.arg_max_rand(log_prob)
+        ind = mu.arg_max_rand(log_prob)
         return self.cb[ind]
 
 
@@ -37,9 +38,8 @@ class SPA:
         self.xx, self.yy = np.where(code.parity_mtx)
 
         coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=code.parity_mtx.shape)
-        sum_axis = lambda d_, ax: np.asarray(coo(d_).sum(axis=ax)).flatten()
-        self.sum_rows = lambda d_: sum_axis(d_, 1)
-        self.sum_cols = lambda d_: sum_axis(d_, 0)
+        self.sum_rows = lambda d_: mu.sum_axis(coo(d_), 1)
+        self.sum_cols = lambda d_: mu.sum_axis(coo(d_), 0)
 
     def decode(self, y):
         xx, yy = self.xx, self.yy

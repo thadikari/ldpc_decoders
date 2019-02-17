@@ -21,3 +21,17 @@ def prod_nonzero(coo, axis):
     mag = np.exp(mtx_to_vec(coo.sum(axis=axis)))
     coo.data = temp
     return prod_nonzero_sign(coo, axis) * mag
+
+
+def log_sum_exp_rows(arr):
+    arr_max = arr.max(axis=1)
+    return arr_max + np.log(np.exp(arr - arr_max[:, None]).sum(axis=1))
+    # sum_terms_1 = np.array([[1, 2, 3], [6, -1, -6]])
+    # print(sum_terms_1)
+    # print(log_sum_exp_rows(sum_terms_1))
+
+
+# returns a random element if encountered multiple arg maxes
+def arg_max_rand(values):
+    max_ind = np.argwhere(values == np.max(values))
+    return np.random.choice(max_ind.flatten(), 1)[0]
