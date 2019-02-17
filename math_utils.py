@@ -23,6 +23,14 @@ def prod_nonzero(coo, axis):
     return prod_nonzero_sign(coo, axis) * mag
 
 
+# wrapper to avoid the warning from np.arctanh(1 or -1)
+def arctanh(val, out):
+    ind_inf = np.abs(val) == 1
+    out[ind_inf] = np.inf * val[ind_inf]
+    out[~ind_inf] = np.arctanh(val[~ind_inf])
+    return out
+
+
 def log_sum_exp_rows(arr):
     arr_max = arr.max(axis=1)
     return arr_max + np.log(np.exp(arr - arr_max[:, None]).sum(axis=1))
