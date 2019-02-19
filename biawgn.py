@@ -1,4 +1,5 @@
 import numpy as np
+import math_utils as mu
 import utils
 import bpa
 
@@ -41,19 +42,19 @@ class ML:
     def decode(self, y):  # incoming cw \reals, outgoing cw {0,1}
         exponent = -np.square(self.cb * 2 - 1 - y) / (2 * self.noise_var)
         log_prob = np.sum(exponent, axis=1)
-        ind = utils.arg_max_rand(log_prob)
+        ind = mu.arg_max_rand(log_prob)
         return self.cb[ind]
 
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, SPA]
-        self.sample('4_2_test', 1, decoders,
+        decoders = [ML, SPA, MSA]
+        self.sample('4_2_test', 1, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 1, 1.6, .9, 1])
-        self.sample('7_4_hamming', .1, decoders,
+        self.sample('7_4_hamming', .1, decoders, 10,
                     [1, 0, 0, 1, 1, 0, 0],
-                    [1, -1, 1.3, 1, 1, -1, -1])
+                    [1, -1, 1.1, 1, 1, -1, -1])
 
 
 if __name__ == "__main__":

@@ -45,7 +45,7 @@ class ML:
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, SPA]
+        decoders = [ML, SPA, MSA]
         self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 0, 0, 1, 1])

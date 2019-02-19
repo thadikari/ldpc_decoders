@@ -1,8 +1,12 @@
+import scipy.sparse as sp
 import numpy as np
 
 mtx_to_vec = lambda mtx: np.asarray(mtx).flatten()
 
 sum_axis = lambda coo, axis: mtx_to_vec(coo.sum(axis=axis))
+
+# np.sign like func with no zeros returned
+sign = lambda val: (val >= 0).astype(int) * 2 - 1
 
 
 # input should be a coo_sparse mtx
@@ -43,3 +47,23 @@ def log_sum_exp_rows(arr):
 def arg_max_rand(values):
     max_ind = np.argwhere(values == np.max(values))
     return np.random.choice(max_ind.flatten(), 1)[0]
+
+
+# https://stackoverflow.com/questions/30742572/argmax-of-each-row-or-column-in-scipy-sparse-matrix
+def csr_csc_argmax(X, axis=None):
+    is_csr = isinstance(X, sp.csr_matrix)
+    is_csc = isinstance(X, sp.csc_matrix)
+    assert (is_csr or is_csc)
+    assert (not axis or (is_csr and axis == 1) or (is_csc and axis == 0))
+
+    major_size = X.shape[0 if is_csr else 1]
+    major_lengths = np.diff(X.indptr)  # group_lengths
+    major_not_empty = (major_lengths > 0)
+
+    result = -np.ones(shape=(major_size,), dtype=X.indices.dtype)
+    split_at = X.indptr[:-1][major_not_empty]
+    maxima = np.zeros((major_size,), dtype=X.dtype)
+    maxima[major_not_empty] = np.maximum.reduceat(X.data, split_at)
+    all_argmax = np.flatnonzero(np.repeat(maxima, major_lengths) == X.data)
+    result[major_not_empty] = X.indices[all_argmax[np.searchsorted(all_argmax, split_at)]]
+    return result

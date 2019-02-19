@@ -3,19 +3,17 @@ import math_utils as mu
 import numpy as np
 
 
-class SPA:
+class BPA:
     def __init__(self, parity_mtx, max_iter):
         self.max_iter = max_iter
         self.parity_mtx = parity_mtx
         self.xx, self.yy = np.where(self.parity_mtx)
 
-        coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=parity_mtx.shape)
-        self.prod_rows = lambda d_: mu.prod_nonzero(coo(d_), 1)
-        self.sum_cols = lambda d_: mu.sum_axis(coo(d_), 0)
+        self.coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=parity_mtx.shape)
+        self.sum_cols = lambda d_: mu.sum_axis(self.coo(d_), 0)
 
     def decode(self, y, priors):
-        xx, yy = self.xx, self.yy
-        prod_rows, sum_cols = self.prod_rows, self.sum_cols
+        xx, yy, sum_cols = self.xx, self.yy, self.sum_cols
         var_to_chk, chk_to_var = priors[yy], priors[yy]
         x_hat, iter_count = y, 0
 
@@ -29,10 +27,7 @@ class SPA:
             if ((self.parity_mtx @ x_hat) % 2 == 0).all(): return ret('decoded')
 
             # chk_to_var
-            tanned = np.tanh(var_to_chk / 2.)
-            chk_msg_prod = prod_rows(tanned)
-            tan = chk_msg_prod[xx] / tanned  # handle possible div by 0
-            chk_to_var = 2 * mu.arctanh(tan, out=chk_to_var)
+            self.decode_(var_to_chk, xx, chk_to_var)
 
             # var_to_chk
             marginal = priors + sum_cols(chk_to_var)
@@ -65,4 +60,39 @@ class SPA:
             iter_count += 1
 
 
-class MSA(SPA): pass
+class SPA(BPA):
+    def __init__(self, parity_mtx, max_iter):
+        super().__init__(parity_mtx, max_iter)
+        self.prod_rows = lambda d_: mu.prod_nonzero(self.coo(d_), 1)
+
+    def decode_(self, var_to_chk, xx, chk_to_var):
+        tanned = np.tanh(var_to_chk / 2.)
+        chk_msg_prod = self.prod_rows(tanned)
+        tan = chk_msg_prod[xx] / tanned  # handle possible div by 0
+        chk_to_var[:] = 2 * mu.arctanh(tan, out=chk_to_var)
+
+
+class MSA(BPA):
+    def __init__(self, parity_mtx, max_iter):
+        super().__init__(parity_mtx, max_iter)
+        self.sign_rows = lambda d_: mu.prod_nonzero_sign(self.coo(d_), 1)
+        self.to_csr = lambda d_: self.coo(d_).tocsr()
+        self.min_rows = lambda csr: mu.csr_csc_argmax(-csr)
+        self.row_ind = np.array(range(parity_mtx.shape[0]))
+
+    def decode_(self, var_to_chk, xx, chk_to_var):
+        sign = self.sign_rows(var_to_chk)[xx] / mu.sign(var_to_chk)
+        csr = self.to_csr(np.abs(var_to_chk))
+        chk_to_var_csr = self.to_csr(chk_to_var)
+        arg_min_1 = self.min_rows(csr)
+        min_ind_1 = self.row_ind, arg_min_1
+        min_val_1 = mu.mtx_to_vec(csr[min_ind_1])
+        chk_to_var_csr.data[:] = min_val_1[xx]
+
+        csr[min_ind_1] = np.inf
+        arg_min_2 = self.min_rows(csr)
+        min_ind_2 = self.row_ind, arg_min_2
+        min_val_2 = mu.mtx_to_vec(csr[min_ind_2])
+        chk_to_var_csr[min_ind_1] = min_val_2
+
+        chk_to_var[:] = sign * chk_to_var_csr.data
