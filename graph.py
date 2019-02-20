@@ -44,10 +44,16 @@ def main(args):
         if comp is not None: ll.sort(key=comp)
         return ll
 
+    def extra_filter(it):
+        if 'max_iter' in it.keys() and args.max_iter is not None:
+            return int(it['max_iter']) == args.max_iter
+        else:
+            return True
+
     if args.type == 'single':
         chk = lambda it: it.get('code', '') == args.code and \
                          it.get('decoder', '') == args.decoder[0] and \
-                         'max_iter' not in it.keys()
+                         extra_filter(it)
         data = filter_data(chk)[0]
         plot_(data[args.error], 'k-', data['decoder'])
         title = def_title(args)
@@ -58,7 +64,7 @@ def main(args):
                           it.get('code', '') == args.extra or \
                           it.get('prefix', '') == args.extra) and \
                          it.get('decoder', '') == args.decoder[0] and \
-                         'max_iter' not in it.keys()
+                         extra_filter(it)
         for data, style in zip(filter_data(chk), line_styles2):
             plot_(data[args.error], style,
                   data.get('prefix', '') + data.get('code', ''))
@@ -67,7 +73,7 @@ def main(args):
     elif args.type == 'comp_dec':
         chk = lambda it: it.get('code', '') == args.code and \
                          it.get('decoder', '') in args.decoder and \
-                         'max_iter' not in it.keys()
+                         extra_filter(it)
         for data in filter_data(chk):
             decoder = data['decoder']
             plot_(data[args.error], lines[decoder], decoder)
@@ -81,7 +87,8 @@ def main(args):
         for data in filter_data(chk): plot_(data[args.error], 'r--', None)
 
         chk_avg = lambda it: 'sources' in it.keys() and \
-                             it.get('prefix', '') == args.code
+                             it.get('prefix', '') == args.code and \
+                             it.get('decoder', '') == args.decoder[0]
         log.info('Searching for average')
         plot_(filter_data(chk_avg)[0][args.error], 'b-', 'Average')
         title = def_title(args) + ' code ensemble' + ', %s decoder' % args.decoder[0]
@@ -106,9 +113,8 @@ def main(args):
     if args.xlim is not None: plt.xlim(args.xlim)
     if args.ylim is not None: plt.ylim(args.ylim)
     plt.title(title)
-    if args.save:
-        img_name = '-'.join((args.channel, args.code)) + '.png'
-        img_path = os.path.join(args.data_dir, img_name)
+    if args.save is not None:
+        img_path = os.path.join(args.data_dir, args.save)
         plt.savefig(img_path, bbox_inches='tight')
     plt.margins(0)  # autoscale(tight=True)
     plt.show()
@@ -127,11 +133,12 @@ def setup_parser():
                                  'max_iter',  # compare iterations cap
                                  'compare'  # compare with another
                                  ])
+    parser.add_argument('--max-iter', help='filter out multiple matches', type=int)
     parser.add_argument('--extra', help='code names to compare with')
     parser.add_argument('--xlim', help='x-axis range', nargs=2, type=float)
     parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
     parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
-    parser.add_argument('--save', help='save as png', action='store_true')
+    parser.add_argument('--save', help='save as file name', type=str)
 
     return utils.bind_parser_common(parser)
 
