@@ -14,6 +14,7 @@ PLOTS_DIR=${3}
 EXT=${4:-png}
 OTHER=${5}
 DIRS="--data-dir=$DATA_DIR --plots-dir=$PLOTS_DIR"
+EXEC="python -u src/graph.py"
 
 log () { echo "plot|$CASE|$1"; }
 run () { echo ">> $1"; eval "$1"; }
@@ -25,10 +26,10 @@ plot_1 () {
     local ARGS2=$4
     local ARGS3=$5
 
-    run "python stats.py $CHANNEL 1200_3_6_rand_ldpc $DECODER --data-dir=$DATA_DIR"
-    run "python graph.py $CHANNEL 1200_3_6_rand_ldpc $DECODER ensemble $DIRS $ARGS1 --save ${CASE}_ensemble.$EXT $OTHER"
-    run "python graph.py $CHANNEL 1200_3_6_rand_ldpc $DECODER compare $DIRS $ARGS2 --extra 1200_3_6_ldpc --save ${CASE}_compare.$EXT $OTHER"
-    run "python graph.py $CHANNEL 1200_3_6_ldpc $DECODER max_iter $DIRS $ARGS3 --save ${CASE}_max_iter.$EXT $OTHER"
+    run "python -u src/stats.py $CHANNEL 1200_3_6_rand_ldpc $DECODER --data-dir=$DATA_DIR"
+    run "$EXEC $CHANNEL 1200_3_6_rand_ldpc $DECODER ensemble $DIRS $ARGS1 --save ${CASE}_ensemble.$EXT $OTHER"
+    run "$EXEC $CHANNEL 1200_3_6_rand_ldpc $DECODER compare $DIRS $ARGS2 --extra 1200_3_6_ldpc --save ${CASE}_compare.$EXT $OTHER"
+    run "$EXEC $CHANNEL 1200_3_6_ldpc $DECODER max_iter $DIRS $ARGS3 --save ${CASE}_max_iter.$EXT $OTHER"
 }
 
 case ${CASE} in
@@ -48,8 +49,8 @@ case ${CASE} in
         plot_1 biawgn SPA "--xlim .5 2.25" "--max-iter=100 --xlim .5 2.5" ""
         ;;
     "MSA_SPA")
-        run "python graph.py bsc 1200_3_6_ldpc SPA MSA comp_dec $DIRS --max-iter=10 --save bsc_MSA_vs_SPA.$EXT $OTHER"
-        run "python graph.py biawgn 1200_3_6_ldpc SPA MSA comp_dec $DIRS --xlim .5 2.75 --save biawgn_MSA_vs_SPA.$EXT $OTHER"
+        run "$EXEC bsc 1200_3_6_ldpc SPA MSA comp_dec $DIRS --max-iter=10 --save bsc_MSA_vs_SPA.$EXT $OTHER"
+        run "$EXEC biawgn 1200_3_6_ldpc SPA MSA comp_dec $DIRS --xlim .5 2.75 --save biawgn_MSA_vs_SPA.$EXT $OTHER"
         ;;
     "ALL")
         dqt='"'

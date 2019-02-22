@@ -19,11 +19,12 @@ run_sim_1 () {
     local DEF_MAX_ITER=$5
     local DEF_ARGS="$ARGS_COM --max-iter=$DEF_MAX_ITER"
     declare -a MAX_ITER_ARR=("${!6}")
+    local EXEC="python -u src/main.py"
 
     LST=()
-    for i in `seq 1 10`; do LST+=("python -u main.py $CHANNEL 1200_3_6_rand_ldpc_$i $DEF_ARGS $ARGS_ENS"); done
-    LST+=("python -u main.py $CHANNEL 1200_3_6_ldpc $DEF_ARGS $ARGS_PRV")
-    for i in ${MAX_ITER_ARR[@]}; do LST+=("python -u main.py $CHANNEL 1200_3_6_ldpc $ARGS_COM --max-iter=$i $ARGS_PRV"); done
+    for i in `seq 1 10`; do LST+=("$EXEC $CHANNEL 1200_3_6_rand_ldpc_$i $DEF_ARGS $ARGS_ENS"); done
+    LST+=("$EXEC $CHANNEL 1200_3_6_ldpc $DEF_ARGS $ARGS_PRV")
+    for i in ${MAX_ITER_ARR[@]}; do LST+=("$EXEC $CHANNEL 1200_3_6_ldpc $ARGS_COM --max-iter=$i $ARGS_PRV"); done
     
     for i in `seq 1 ${#LST[@]}`; do run "${LST[$i-1]}"; done
 }

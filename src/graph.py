@@ -137,7 +137,7 @@ def setup_parser():
     parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
     parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
     parser.add_argument('--save', help='save as file name', type=str)
-    parser.add_argument('--plots-dir', help='save location', default=os.path.join('..', 'plots'), type=str)
+    parser.add_argument('--plots-dir', help='save location', default=os.path.join('.', 'plots'), type=str)
     parser.add_argument('--silent', help='do not show plot output', action='store_true')
     parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
 

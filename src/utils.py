@@ -31,7 +31,7 @@ def setup_parser(code_names, channel_names, decoder_names):
 
 
 def bind_parser_common(parser):
-    parser.add_argument('--data-dir', help='data directory', default=os.path.join('..', 'temp'))
+    parser.add_argument('--data-dir', help='data directory', default=os.path.join('.', 'data'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
     parser.add_argument('--console', help='prints log onto console', action='store_true')
     return parser
