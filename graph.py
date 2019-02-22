@@ -1,12 +1,10 @@
-import matplotlib.pyplot as plt
 import argparse
 import logging
 import os
 import re
-
+import matplotlib
 from models import models
 import utils
-import codes
 
 x_labels = {'bsc': 'Crossover probability',
             'bec': 'Erasure probability',
@@ -113,11 +111,11 @@ def main(args):
     if args.xlim is not None: plt.xlim(args.xlim)
     if args.ylim is not None: plt.ylim(args.ylim)
     plt.title(title)
-    if args.save is not None:
-        img_path = os.path.join(args.data_dir, args.save)
-        plt.savefig(img_path, bbox_inches='tight')
     plt.margins(0)  # autoscale(tight=True)
-    plt.show()
+    if args.save is not None:
+        img_path = os.path.join(args.plots_dir, args.save)
+        plt.savefig(img_path, bbox_inches='tight')
+    if not args.silent: plt.show()
 
 
 def setup_parser():
@@ -139,10 +137,19 @@ def setup_parser():
     parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
     parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
     parser.add_argument('--save', help='save as file name', type=str)
+    parser.add_argument('--plots-dir', help='save location', default=os.path.join('..', 'plots'), type=str)
+    parser.add_argument('--silent', help='do not show plot output', action='store_true')
+    parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
 
     return utils.bind_parser_common(parser)
 
 
 if __name__ == "__main__":
     utils.setup_console_logger()
-    main(setup_parser().parse_args())
+    args = setup_parser().parse_args()
+    if args.agg: matplotlib.use('Agg')
+    import matplotlib.pyplot
+
+    global plt
+    plt = matplotlib.pyplot
+    main(args)

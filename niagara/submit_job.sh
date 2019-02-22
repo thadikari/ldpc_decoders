@@ -14,23 +14,22 @@
 echo "Current working directory: `pwd`"
 echo "Starting run at: `date`"
 # ---------------------------------------------------------------------
+
+RUN_ID="$SLURM_ARRAY_JOB_ID/$SLURM_JOB_ID:$SLURM_ARRAY_TASK_ID/$SLURM_ARRAY_TASK_COUNT"
 echo ""
-echo "Job Array ID / Job ID: $SLURM_ARRAY_JOB_ID / $SLURM_JOB_ID"
-if ! [ -z ${SLURM_ARRAY_TASK_ID+x} ]; then echo "This is job $SLURM_ARRAY_TASK_ID out of $SLURM_ARRAY_TASK_COUNT jobs."; fi
+echo "Job Array ID / Job ID , Array Task ID / Array Task Count: $RUN_ID"
 echo ""
 # ---------------------------------------------------------------------
 
-cd /home/s/sdraper/tharindu/projects/decoders/src
-pwd
-source niagara/setup_env.sh
+log () { echo "submit|$RUN_ID|$1"; }
+run () { log ">> $1"; eval "$1"; }
 
-CASES=("BEC" "BSC_MSA" "AWGN_MSA" "BSC_SPA" "AWGN_SPA")
-for CASE in ${CASES[@]}; do
-    echo 'Executing srun, CASE:'$CASE
-    ./run_sims.sh $CASE $SCRATCH &
-done
+run "cd /home/s/sdraper/tharindu/projects/decoders/src"
+run "pwd"
+run "source niagara/setup_env.sh"
+
+CASES=("BEC" "BSC_MSA" "BIAWGN_MSA" "BSC_SPA" "BIAWGN_SPA")
+for CASE in ${CASES[@]}; do run "./run_sims.sh $CASE $SCRATCH PARALLEL" & done
 
 wait
-echo ""
-echo "Job finished with exit code $? at: `date`."
-echo ""
+log "Job finished with exit code $? at: `date`."
