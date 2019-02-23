@@ -32,6 +32,7 @@ def setup_parser(code_names, channel_names, decoder_names):
 
 def bind_parser_common(parser):
     parser.add_argument('--data-dir', help='data directory', default=os.path.join('.', 'data'))
+    parser.add_argument('--plots-dir', help='save location', default=os.path.join('.', 'plots'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
     parser.add_argument('--console', help='prints log onto console', action='store_true')
     return parser
@@ -61,8 +62,9 @@ class TestCase(unittest.TestCase):
             # self.assertTrue((spa.decode(y_) == x_).all())
 
 
-get_data_file_list = lambda data_dir: tuple(it for it in next(os.walk(data_dir))[2]
-                                            if os.path.splitext(it)[1] == '.json')
+def get_data_file_list(data_dir):
+    return tuple(it for it in next(os.walk(data_dir), ((), (), ()))[2]
+                 if os.path.splitext(it)[1] == '.json')
 
 
 def load_json(file_path):
@@ -77,9 +79,15 @@ def load_json(file_path):
         return data
 
 
+def make_dir_if_not_exists(dir_path):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+
 class Saver:
     def __init__(self, data_dir, run_ids):
         self.dict = OrderedDict(run_ids)
+        make_dir_if_not_exists(data_dir)
         dir_path, file_name = data_dir, '-'.join(self.dict.values())
         self.file_path = os.path.join(dir_path, '%s.json' % file_name)
 

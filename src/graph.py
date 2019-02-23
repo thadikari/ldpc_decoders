@@ -48,11 +48,18 @@ def main(args):
         else:
             return True
 
+    def get_first(ll, rsn):
+        if len(ll) == 0:
+            log.error('No matching data found for: %s.' % rsn)
+            exit()
+        else:
+            return ll[0]
+
     if args.type == 'single':
         chk = lambda it: it.get('code', '') == args.code and \
                          it.get('decoder', '') == args.decoder[0] and \
                          extra_filter(it)
-        data = filter_data(chk)[0]
+        data = get_first(filter_data(chk), 'single')
         plot_(data[args.error], 'k-', data['decoder'])
         title = def_title(args)
 
@@ -88,7 +95,7 @@ def main(args):
                              it.get('prefix', '') == args.code and \
                              it.get('decoder', '') == args.decoder[0]
         log.info('Searching for average')
-        plot_(filter_data(chk_avg)[0][args.error], 'b-', 'Average')
+        plot_(get_first(filter_data(chk_avg), 'average')[args.error], 'b-', 'Average')
         title = def_title(args) + ' code ensemble' + ', %s decoder' % args.decoder[0]
 
     elif args.type == 'max_iter':
@@ -113,6 +120,7 @@ def main(args):
     plt.title(title)
     plt.margins(0)  # autoscale(tight=True)
     if args.save is not None:
+        utils.make_dir_if_not_exists(args.plots_dir)
         img_path = os.path.join(args.plots_dir, args.save)
         plt.savefig(img_path, bbox_inches='tight')
     if not args.silent: plt.show()
@@ -137,7 +145,6 @@ def setup_parser():
     parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
     parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
     parser.add_argument('--save', help='save as file name', type=str)
-    parser.add_argument('--plots-dir', help='save location', default=os.path.join('.', 'plots'), type=str)
     parser.add_argument('--silent', help='do not show plot output', action='store_true')
     parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
 

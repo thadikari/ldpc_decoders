@@ -19,7 +19,7 @@ Checkout `assests` branch to see all pre-compupted results. These include differ
 ### Running simulations
 * Make directories `codes` and `data` in the root directory.
 * Execute `python src/codes.py 10 1200 3 6` to generate 10 random samples from `LDPC(1200,3,6)` ensemble.
-* Run all simulations using `run_sims.sh {CASE} ./data {PARA}` command. For example,
+* Run simulations using `run_sims.sh {CASE} ./data {PARA}` command. For example,
   * `./run_sims.sh BEC ./data` executes all BEC related simulations **sequentially**.
   * `./run_sims.sh BEC ./data PARA` executes all BEC related simulations **in parallel**.
   * Use the latter only on a **dedicated server** as it will take large amount of CPU.
@@ -27,7 +27,7 @@ Checkout `assests` branch to see all pre-compupted results. These include differ
 
 * If running the simulations on [Niagara cluster](https://docs.computecanada.ca/wiki/Niagara), need to setup environment first by executing [`setup_env.sh`](../master/niagara/setup_env.sh).
 * Execute `./run_sims.sh BEC $SCRATCH PARA` to test if simulations run properly.
-* All simulations can be submitted for later excution on Niagara by using command `sbatch submit_job.sh`.
+* All simulations can be submitted for later excution on Niagara by using command `sbatch niagara/submit_job.sh`.
 
 
 ### Generating plots
