@@ -21,7 +21,7 @@ Checkout `assests` branch to see all pre-compupted results. These include differ
 * Make directories `codes` and `data` in the root directory.
 * Execute `python src/codes.py 10 1200 3 6` to generate 10 random samples from `LDPC(1200,3,6)` ensemble.
 * Run simulations using `run_sims.sh {CASE} {PARA} {ARGS}` command. For example,
-*  `./run_sims.sh HMG` executes all Hamming code related simulations **sequentially**.
+  * `./run_sims.sh HMG` executes all Hamming code related simulations **sequentially**.
   * `./run_sims.sh BEC SEQL --data-dir=./data --console` executes some LDPC and BEC related simulations **sequentially** while printing logs onto console.
   * `./run_sims.sh BEC PARA --data-dir=./data` executes the same **in parallel**.
   * Use the latter only on a **dedicated server** as it will take large amount of CPU.
@@ -51,7 +51,7 @@ Checkout `assests` branch to see all pre-compupted results. These include differ
 ### Ensemble average
 * `python src/stats.py bec 1200_3_6_rand_ldpc SPA`
 
-### Plotting
+### Plots
 * `python src/graph.py bec 1200_3_6_ldpc SPA single --error ber`
 * `python src/graph.py bsc 7_4_hamming SPA ML comp_dec --error wer`
 * See [`plot_results.sh`](../master/plot_results.sh) for more.
