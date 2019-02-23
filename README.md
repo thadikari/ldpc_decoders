@@ -10,7 +10,7 @@ Following Python/package versions (or higher) are required.
 
 ## Exploring pre-computed results
 Checkout `assests` branch to see all pre-compupted results. These include different codes, simulation results and plots.
-<img src="../assets/plots/BEC_ensemble.png?raw=true" width="280" />
+<img src="../assets/plots/BIAWGN_MSA_ensemble.png?raw=true" width="280" />
 <img src="../assets/plots/BSC_SPA_compare.png?raw=true" width="280" />
 <img src="../assets/plots/biawgn_MSA_vs_SPA.png?raw=true" width="280" />
 
@@ -46,9 +46,9 @@ Checkout `assests` branch to see all pre-compupted results. These include differ
 * See [`run_sims.sh`](../master/run_sims.sh) for more.
 
 ### Ensemble average
-* python src/stats.py bec 1200_3_6_rand_ldpc SPA
+* `python src/stats.py bec 1200_3_6_rand_ldpc SPA`
 
 ### Plotting
-* python src/graph.py bec 1200_3_6_ldpc SPA single --error ber
-* python src/graph.py bsc 7_4_hamming SPA ML comp_dec --error wer
+* `python src/graph.py bec 1200_3_6_ldpc SPA single --error ber`
+* `python src/graph.py bsc 7_4_hamming SPA ML comp_dec --error wer`
 * See [`plot_results.sh`](../master/plot_results.sh) for more.
