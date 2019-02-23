@@ -23,13 +23,18 @@ echo ""
 
 log () { echo "submit|$RUN_ID|$1"; }
 run () { log ">> $1"; eval "$1"; }
+list () {
+    declare -a LIST=("${!1}")
+    for CASE in ${LIST[@]}; do run "./run_sims.sh $CASE PARA --data-dir=$SCRATCH" & done
+}
 
 run "cd /home/s/sdraper/tharindu/projects/decoders/src"
 run "pwd"
 run "source niagara/setup_env.sh"
 
 CASES=("BEC" "BSC_MSA" "BIAWGN_MSA" "BSC_SPA" "BIAWGN_SPA")
-for CASE in ${CASES[@]}; do run "./run_sims.sh $CASE $SCRATCH PARALLEL" & done
+list CASES[@]  # TODO: split cases by Array Task Count
 
+log "Waiting..."
 wait
 log "Job finished with exit code $? at: `date`."
