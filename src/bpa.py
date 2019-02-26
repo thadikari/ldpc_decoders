@@ -35,6 +35,7 @@ class BPA:
                 var_to_chk = marginal[yy] - chk_to_var
                 marginal[np.isnan(marginal)] = 0.
             else:
+                # TODO: following piece is to handle cases where llr is inf. slower and uglier than inf unhandled case. needs refactoring
                 # assert fails on (inf-inf), i.e., conflicting 100% beliefs form checks
                 # may be replace them by 0 cuz conflicting certainties mean uncertain?
                 # assert (~np.isnan(marginal).any())
@@ -68,7 +69,7 @@ class SPA(BPA):
     def decode_(self, var_to_chk, xx, chk_to_var):
         tanned = np.tanh(var_to_chk / 2.)
         chk_msg_prod = self.prod_rows(tanned)
-        tan = chk_msg_prod[xx] / tanned  # handle possible div by 0
+        tan = chk_msg_prod[xx] / tanned  # TODO: handle possible div by 0
         chk_to_var[:] = 2 * mu.arctanh(tan, out=chk_to_var)
 
 
@@ -81,6 +82,7 @@ class MSA(BPA):
         self.row_ind = np.array(range(parity_mtx.shape[0]))
 
     def decode_(self, var_to_chk, xx, chk_to_var):
+        # TODO: way slower than SPA. needs refactoring
         sign = self.sign_rows(var_to_chk)[xx] / mu.sign(var_to_chk)
         csr = self.to_csr(np.abs(var_to_chk))
         chk_to_var_csr = self.to_csr(chk_to_var)

@@ -9,7 +9,7 @@ import utils
 x_labels = {'bsc': 'Crossover probability',
             'bec': 'Erasure probability',
             'biawgn': 'E_b/N in dB for E_b=1'}
-lines = {'ML': 'b-+', 'SPA': 'g--', 'MSA': 'r-.', 'LP': 'm-+', 'ADMM': 'k-:'}
+lines = {'ML': 'b:', 'SPA': 'g--', 'MSA': 'r-.', 'LP': 'm-+', 'ADMM': 'k--'}
 line_styles2 = ['b--', 'r-']
 line_styles = list(it1 + it2
                    for it1 in ['-', '--', '-.', ':']
@@ -105,7 +105,7 @@ def main(args):
         for data, style in zip(filter_data(chk, lambda it: int(it['max_iter'])), line_styles):
             decoder = data['decoder']
             plot_(data[args.error], style, data['max_iter'])
-        title = def_title(args) + ', %s decoder' % args.decoder[0] + ', Error as a function of iterations cap'
+        title = def_title(args) + ', %s decoder' % args.decoder[0] + ', Effect of iterations cap'
 
     else:
         return

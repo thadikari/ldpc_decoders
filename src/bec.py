@@ -2,6 +2,7 @@ from scipy.sparse import coo_matrix
 import math_utils as mu
 import numpy as np
 import utils
+import lp
 
 
 class Channel:
@@ -28,6 +29,16 @@ class ML:
         log_prob[num_diffs > 0] = np.NINF  # CWs that don't match have NINF log likelihood
         ind = mu.arg_max_rand(log_prob)
         return self.cb[ind]
+
+
+class LP:
+    def __init__(self, p, code, max_iter):
+        self.dec = lp.LP(code.parity_mtx, max_iter)
+        safe_inf = 1e8
+        self.llr = np.array([safe_inf, -safe_inf, 0])  # 0 WP1, 1 WP1, 0 OR 1 WP0.5
+
+    def decode(self, y):
+        return self.dec.decode(y, self.llr[y])
 
 
 class SPA:
@@ -88,7 +99,7 @@ class MSA(SPA): pass
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, SPA]
+        decoders = [ML, LP, SPA]
         self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 2, 0, 1, 2])

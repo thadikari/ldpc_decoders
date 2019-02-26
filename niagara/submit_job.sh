@@ -28,7 +28,7 @@ list () {
     for CASE in ${LIST[@]}; do run "./run_sims.sh $CASE PARA --data-dir=$SCRATCH" & done
 }
 
-run "cd /home/s/sdraper/tharindu/projects/decoders/src"
+run "cd /home/s/sdraper/tharindu/projects/decoders"
 run "pwd"
 run "source niagara/setup_env.sh"
 

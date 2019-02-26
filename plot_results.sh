@@ -44,23 +44,23 @@ case ${CASE} in
         exc "biawgn 7_4_hamming ML SPA MSA LP comp_dec --error wer" "BIAWGN"
         ;;
     "BEC")
-        plot_1 bec SPA "--xlim .3 .5 --ylim 2e-7 .5" "--max-iter=10 --xlim .3 .5 --ylim 3e-5 .5" ""
+        plot_1 bec SPA "--xlim .3 .5 --ylim 2e-7 .5 --max-iter=10" "--max-iter=10 --xlim .3 .5 --ylim 3e-5 .5" ""
         ;;
     "BSC_MSA")
-        plot_1 bsc MSA "--xlim 0.02 0.08 --ylim 6e-6 .2" "--max-iter=10 --xlim 0.015 0.08" ""
+        plot_1 bsc MSA "--xlim 0.02 0.08 --ylim 6e-6 .2 --max-iter=10" "--max-iter=10 --xlim 0.015 0.08" ""
         ;;
     "BIAWGN_MSA")
-        plot_1 biawgn MSA "--xlim .25 2.75 --ylim 1e-5 .2" "--max-iter=10 --xlim .25 2.75" "--xlim .25 2.75"
+        plot_1 biawgn MSA "--xlim .5 3 --ylim 3e-5 .2 --max-iter=10" "--max-iter=10 --xlim .5 3 --ylim 3e-5 .2" "--xlim .5 3 --ylim 4e-4 .2"
         ;;
     "BSC_SPA")
-        plot_1 bsc SPA "" "--max-iter=100" ""
+        plot_1 bsc SPA "--max-iter=10" "--max-iter=10" ""
         ;;
     "BIAWGN_SPA")
-        plot_1 biawgn SPA "--xlim .5 2.25" "--max-iter=100 --xlim .5 2.5" ""
+        plot_1 biawgn SPA "--xlim .5 3 --max-iter=10" "--max-iter=10 --xlim .5 3" "--xlim .5 3 --ylim 3e-5 .2"
         ;;
     "MSA_SPA")
         exc "bsc 1200_3_6_ldpc SPA MSA comp_dec --max-iter=10" "BSC"
-        exc "biawgn 1200_3_6_ldpc SPA MSA comp_dec --xlim .5 2.75" "BIAWGN"
+        exc "biawgn 1200_3_6_ldpc SPA MSA comp_dec --max-iter=10 --xlim .5 2.75" "BIAWGN"
         ;;
     "ALL")
         ARR=("BEC" "BSC_MSA" "BIAWGN_MSA" "BSC_SPA" "BIAWGN_SPA" "MSA_SPA")

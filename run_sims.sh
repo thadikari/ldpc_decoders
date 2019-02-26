@@ -34,24 +34,24 @@ run_sim_1 () {
 DEF_MIN_WEC="--min-wec=100"
 DEF_ARR=(0 1 2 3 6 40 100)
 
+list_DEC () {
+    declare -a DECS_=("${!3}")
+    for DEC in ${DECS_[@]}; do exc "$1 $DEC $2"; done
+}
+
 case ${CASE} in
     "HMG") # all hamming code sims
         CMN="--codeword=1 --min-wec=300"
         PARAMS=".5 .4 .3 .2 .1 .08 .06 .04 .02"
-        exc "bec 7_4_hamming SPA $CMN --params $PARAMS"
-        exc "bec 7_4_hamming ML $CMN --params $PARAMS"
+        DECS=("ML" "LP" "SPA")
+        list_DEC "bec 7_4_hamming" "$CMN --params $PARAMS" DECS[@]
 
         PARAMS="$PARAMS .25 .15 .01 .008 .006 .004 .002"
-        exc "bsc 7_4_hamming MSA $CMN --params $PARAMS"
-        exc "bsc 7_4_hamming SPA $CMN --params $PARAMS"
-        exc "bsc 7_4_hamming ML $CMN --params $PARAMS"
-        exc "bsc 7_4_hamming LP $CMN --params $PARAMS"
+        DECS=("ML" "LP" "SPA" "MSA")
+        list_DEC "bsc 7_4_hamming" "$CMN --params $PARAMS" DECS[@]
 
         PARAMS="2 2.5 3 3.5 4 4.5 5 5.5 6 6.6 7"
-        exc "biawgn 7_4_hamming MSA $CMN --params $PARAMS"
-        exc "biawgn 7_4_hamming SPA $CMN --params $PARAMS"
-        exc "biawgn 7_4_hamming ML $CMN --params $PARAMS"
-        exc "biawgn 7_4_hamming LP $CMN --params $PARAMS"
+        list_DEC "biawgn 7_4_hamming" "$CMN --params $PARAMS" DECS[@]
         ;;
     "BEC")
         ARGS="--params .5 .475 .45 .425 .4 .375 .35 .34 .33 .325 .32 .31 .3"
@@ -59,10 +59,10 @@ case ${CASE} in
         ;;
     "BSC_MSA")
         ARGS="$DEF_MIN_WEC --params .081 .0751 .071 .0651 .061 .0551 .051 .0451 .041 .0351 .031 .0251 .021 .0151 .01"
-        run_sim_1 bsc "MSA --codeword=1 --params" "$ARGS" "$ARGS" 10 DEF_ARR[@]
+        run_sim_1 bsc "MSA --codeword=1" "$ARGS" "$ARGS" 10 DEF_ARR[@]
         ;;
     "BIAWGN_MSA")
-        ARGS="$DEF_MIN_WEC --params .5 .75 1. 1.25 1.5 1.75 2. 2.25 2.5 2.75 3.0"
+        ARGS="$DEF_MIN_WEC --params .5 .75 1. 1.25 1.5 1.75 2. 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0"
         run_sim_1 biawgn "MSA --codeword=1" "$ARGS" "$ARGS" 10 DEF_ARR[@]
         ;;
     "BSC_SPA")
