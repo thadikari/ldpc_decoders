@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #Usage: ./plot_results.sh HMG png ./data ./plots --silent --error=ber
 
@@ -39,9 +39,9 @@ list () {
 
 case ${CASE} in
     "HMG") # all hamming code sims
-        exc "bec 7_4_hamming ML SPA comp_dec --error wer" "BEC"
-        exc "bsc 7_4_hamming ML SPA MSA comp_dec --error wer" "BSC"
-        exc "biawgn 7_4_hamming ML SPA MSA comp_dec --error wer" "BIAWGN"
+        exc "bec 7_4_hamming ML SPA LP comp_dec --error wer" "BEC"
+        exc "bsc 7_4_hamming ML SPA MSA LP comp_dec --error wer" "BSC"
+        exc "biawgn 7_4_hamming ML SPA MSA LP comp_dec --error wer" "BIAWGN"
         ;;
     "BEC")
         plot_1 bec SPA "--xlim .3 .5 --ylim 2e-7 .5" "--max-iter=10 --xlim .3 .5 --ylim 3e-5 .5" ""

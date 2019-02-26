@@ -1,6 +1,7 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-#Usage: ./run_sims.sh HMG SEQL --data-dir=./data --console
+#Usage - local  : ./run_sims.sh HMG SEQL --data-dir=./data --console
+#Usage - niagara: ./run_sims.sh HMG PARA --data-dir=$SCRATCH --console
 
 
 CASE=$1
@@ -44,11 +45,13 @@ case ${CASE} in
         exc "bsc 7_4_hamming MSA $CMN --params $PARAMS"
         exc "bsc 7_4_hamming SPA $CMN --params $PARAMS"
         exc "bsc 7_4_hamming ML $CMN --params $PARAMS"
+        exc "bsc 7_4_hamming LP $CMN --params $PARAMS"
 
         PARAMS="2 2.5 3 3.5 4 4.5 5 5.5 6 6.6 7"
         exc "biawgn 7_4_hamming MSA $CMN --params $PARAMS"
         exc "biawgn 7_4_hamming SPA $CMN --params $PARAMS"
         exc "biawgn 7_4_hamming ML $CMN --params $PARAMS"
+        exc "biawgn 7_4_hamming LP $CMN --params $PARAMS"
         ;;
     "BEC")
         ARGS="--params .5 .475 .45 .425 .4 .375 .35 .34 .33 .325 .32 .31 .3"
