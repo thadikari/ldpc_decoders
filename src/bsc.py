@@ -2,6 +2,7 @@ import numpy as np
 import math_utils as mu
 import utils
 import bpa
+import lp
 
 
 class Channel:
@@ -30,6 +31,11 @@ class MSA(BPA):
         super().__init__(p, bpa.MSA(code.parity_mtx, max_iter))
 
 
+class LP(BPA):
+    def __init__(self, p, code, max_iter):
+        super().__init__(p, lp.LP(code.parity_mtx, max_iter))
+
+
 class ML:
     def __init__(self, p, code, max_iter):
         self.log_p, self.log_1p = np.log(p), np.log(1 - p)
@@ -45,7 +51,7 @@ class ML:
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, SPA, MSA]
+        decoders = [ML, SPA, MSA, LP]
         self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 0, 0, 1, 1])

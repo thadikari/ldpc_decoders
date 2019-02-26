@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 #Usage: ./plot_results.sh HMG png ./data ./plots --silent --error=ber
 

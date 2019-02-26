@@ -10,7 +10,7 @@ import codes
 from collections import OrderedDict
 import time
 
-decoder_names = ['ML', 'SPA', 'MSA']
+decoder_names = ['ML', 'SPA', 'MSA', 'LP', 'ADMM']
 
 
 def setup_parser(code_names, channel_names, decoder_names):

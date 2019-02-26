@@ -9,7 +9,7 @@ import utils
 x_labels = {'bsc': 'Crossover probability',
             'bec': 'Erasure probability',
             'biawgn': 'E_b/N in dB for E_b=1'}
-lines = {'ML': 'b-+', 'SPA': 'g--', 'MSA': 'r-.'}
+lines = {'ML': 'b-+', 'SPA': 'g--', 'MSA': 'r-.', 'LP': 'm-+', 'ADMM': 'k-:'}
 line_styles2 = ['b--', 'r-']
 line_styles = list(it1 + it2
                    for it1 in ['-', '--', '-.', ':']
