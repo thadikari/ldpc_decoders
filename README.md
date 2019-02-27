@@ -12,7 +12,10 @@ Following Python/package versions (or higher) are required.
 Checkout `assests` branch to see all pre-compupted results. These include different codes, simulation results and plots.
 <img src="../assets/plots/BIAWGN_MSA_ensemble.png?raw=true" width="280" />
 <img src="../assets/plots/BSC_SPA_compare.png?raw=true" width="280" />
-<img src="../assets/plots/biawgn_MSA_vs_SPA.png?raw=true" width="280" />
+<img src="../assets/plots/MSA_SPA_BIAWGN.png?raw=true" width="280" />
+<img src="../assets/plots/BEC_compare.png?raw=true" width="280" />
+<img src="../assets/plots/BEC_max_iter.png?raw=true" width="280" />
+<img src="../assets/plots/HMG_BIAWGN.png?raw=true" width="280" />
 
 
 ## Starting from scratch
