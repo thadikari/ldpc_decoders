@@ -2,6 +2,9 @@ codes/*
 data/*
 plots/*
 
+# MATLAB mex files
+*.mex*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
