@@ -1,6 +1,7 @@
 import numpy as np
 import itertools
 from scipy.optimize import linprog
+import math_utils as mu
 
 
 class LP:
@@ -30,8 +31,4 @@ class LP:
                       b_ub=self.b_ub, bounds=(0, 1),
                       # options={"disp": True, "maxiter": self.max_iter}
                       )
-        x = res.x
-        idx = np.logical_and(x > 1e-8, (1 - x) > 1e-8)
-        ret = (res.x > .5).astype(int)
-        ret[idx] = 3  # fractional vertices
-        return ret
+        return mu.pseudo_to_real_cw(res.x)

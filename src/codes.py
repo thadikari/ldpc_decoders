@@ -61,7 +61,7 @@ file_codes_dir = os.path.join('.', 'codes')
 
 
 def get_file_code_map():
-    file_list = next(os.walk(file_codes_dir))[2]
+    file_list = next(os.walk(file_codes_dir), ((), (), ()))[2]
     file_code_list = list(map(lambda x: os.path.splitext(x)[0], file_list))
     file_code_map = dict(zip(file_code_list, file_list))
     return file_code_map

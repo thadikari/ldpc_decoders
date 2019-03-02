@@ -67,3 +67,10 @@ def csr_csc_argmax(X, axis=None):
     all_argmax = np.flatnonzero(np.repeat(maxima, major_lengths) == X.data)
     result[major_not_empty] = X.indices[all_argmax[np.searchsorted(all_argmax, split_at)]]
     return result
+
+
+def pseudo_to_real_cw(x):
+    idx = np.logical_and(x > 1e-8, (1 - x) > 1e-8)
+    ret = (x > .5).astype(int)
+    ret[idx] = 3  # fractional vertices
+    return ret

@@ -3,6 +3,7 @@ import math_utils as mu
 import utils
 import bpa
 import lp
+import admm
 
 noise_var = lambda snr_in_db: 10 ** (-snr_in_db / 10)
 
@@ -39,6 +40,11 @@ class LP(BPA):
         super().__init__(p, lp.LP(code.parity_mtx, max_iter))
 
 
+class ADMM(BPA):
+    def __init__(self, p, code, max_iter):
+        super().__init__(p, admm.ADMM(code.parity_mtx, max_iter))
+
+
 class ML:
     def __init__(self, snr_in_db, code, max_iter):
         # map {0,1} to {-1,+1}
@@ -54,7 +60,7 @@ class ML:
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, SPA, MSA, LP]
+        decoders = [ML, SPA, MSA, LP, ADMM]
         self.sample('4_2_test', 1, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 1, 1.6, .9, 1])
