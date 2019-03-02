@@ -1,8 +1,11 @@
 import numpy as np
+
 import math_utils as mu
 import utils
+
 import bpa
 import lp
+import admm
 
 
 class Channel:
@@ -13,7 +16,7 @@ class Channel:
         return (x + (np.random.random(x.shape) < self.p)) % 2
 
 
-class BPA:
+class LLR:
     def __init__(self, p, dec):
         self.llr, self.dec = np.log(1 - p) - np.log(p), dec
 
@@ -21,19 +24,24 @@ class BPA:
         return self.dec.decode(y, self.llr * (1 - 2 * y))
 
 
-class SPA(BPA):
+class SPA(LLR):
     def __init__(self, p, code, max_iter):
         super().__init__(p, bpa.SPA(code.parity_mtx, max_iter))
 
 
-class MSA(BPA):
+class MSA(LLR):
     def __init__(self, p, code, max_iter):
         super().__init__(p, bpa.MSA(code.parity_mtx, max_iter))
 
 
-class LP(BPA):
+class LP(LLR):
     def __init__(self, p, code, max_iter):
         super().__init__(p, lp.LP(code.parity_mtx, max_iter))
+
+
+class ADMM(LLR):
+    def __init__(self, p, code, max_iter):
+        super().__init__(p, admm.ADMM(code.parity_mtx, max_iter))
 
 
 class ML:
@@ -51,7 +59,7 @@ class ML:
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, SPA, MSA, LP]
+        decoders = [ML, SPA, MSA, LP, ADMM]
         self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 0, 0, 1, 1])

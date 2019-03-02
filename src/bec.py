@@ -1,8 +1,11 @@
 from scipy.sparse import coo_matrix
-import math_utils as mu
 import numpy as np
+
+import math_utils as mu
 import utils
+
 import lp
+import admm
 
 
 class Channel:
@@ -31,14 +34,23 @@ class ML:
         return self.cb[ind]
 
 
-class LP:
-    def __init__(self, p, code, max_iter):
-        self.dec = lp.LP(code.parity_mtx, max_iter)
-        safe_inf = 1e8
+class LLR:
+    def __init__(self, dec):
+        self.dec, safe_inf = dec, 1e8
         self.llr = np.array([safe_inf, -safe_inf, 0])  # 0 WP1, 1 WP1, 0 OR 1 WP0.5
 
     def decode(self, y):
         return self.dec.decode(y, self.llr[y])
+
+
+class LP(LLR):
+    def __init__(self, p, code, max_iter):
+        super().__init__(lp.LP(code.parity_mtx, max_iter))
+
+
+class ADMM(LLR):
+    def __init__(self, p, code, max_iter):
+        super().__init__(admm.ADMM(code.parity_mtx, max_iter))
 
 
 class SPA:
@@ -99,7 +111,7 @@ class MSA(SPA): pass
 
 class Test(utils.TestCase):
     def test_all(self):
-        decoders = [ML, LP, SPA]
+        decoders = [ML, LP, SPA, ADMM]
         self.sample('4_2_test', 1 / 3, decoders, 10,
                     [1, 1, 0, 1, 1],
                     [1, 2, 0, 1, 2])

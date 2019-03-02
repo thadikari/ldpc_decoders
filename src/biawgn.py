@@ -1,6 +1,8 @@
 import numpy as np
+
 import math_utils as mu
 import utils
+
 import bpa
 import lp
 import admm
@@ -16,7 +18,7 @@ class Channel:
         return (2 * x - 1) + np.random.normal(0, self.std_dev, x.shape)
 
 
-class BPA:
+class LLR:
     def __init__(self, snr_in_db, dec):
         self.noise_var, self.dec = noise_var(snr_in_db), dec
 
@@ -25,22 +27,22 @@ class BPA:
         return self.dec.decode(y, -2 * y / self.noise_var)
 
 
-class SPA(BPA):
+class SPA(LLR):
     def __init__(self, snr_in_db, code, max_iter):
         super().__init__(snr_in_db, bpa.SPA(code.parity_mtx, max_iter))
 
 
-class MSA(BPA):
+class MSA(LLR):
     def __init__(self, snr_in_db, code, max_iter):
         super().__init__(snr_in_db, bpa.MSA(code.parity_mtx, max_iter))
 
 
-class LP(BPA):
+class LP(LLR):
     def __init__(self, p, code, max_iter):
         super().__init__(p, lp.LP(code.parity_mtx, max_iter))
 
 
-class ADMM(BPA):
+class ADMM(LLR):
     def __init__(self, p, code, max_iter):
         super().__init__(p, admm.ADMM(code.parity_mtx, max_iter))
 

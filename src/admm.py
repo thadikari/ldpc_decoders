@@ -1,5 +1,6 @@
 from scipy.sparse import coo_matrix
 import numpy as np
+
 import math_utils as mu
 import parity_polytope
 
@@ -23,7 +24,7 @@ class ADMM:
         while 1:
             # update x
             x_hat = np.clip((self.sum_cols(z_old - lambda_vec / self.mu)
-                                - gamma / self.mu) / self.var_deg, 0., 1.)
+                             - gamma / self.mu) / self.var_deg, 0., 1.)
             x_hat_yy = x_hat[yy]
 
             # update z
