@@ -31,4 +31,4 @@ class LP:
                       b_ub=self.b_ub, bounds=(0, 1),
                       # options={"disp": True, "maxiter": self.max_iter}
                       )
-        return mu.pseudo_to_real_cw(res.x)
+        return (res.x > .5).astype(int)

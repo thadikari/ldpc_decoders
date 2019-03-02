@@ -84,7 +84,9 @@ def load_parity_mtx(file_path):
     with open(file_path, 'r') as fp:
         lines = tuple(line for line in fp if len(line.split()) > 0)
         max_ind = max(tuple(max(map(int, line.split())) for line in lines))
-        mtx = np.zeros((len(lines), max_ind), int)
+        min_ind = min(tuple(min(map(int, line.split())) for line in lines))
+        if min_ind not in [0, 1]: raise "Minimum index is not 0 or 1."
+        mtx = np.zeros((len(lines), max_ind + (0 if min_ind == 1 else 1)), int)
         chk_num = 1
         for line in lines:
             for var_num in map(int, line.split()):

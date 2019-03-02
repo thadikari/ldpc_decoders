@@ -268,15 +268,25 @@ void ProjPolytope(double *input, double *output, int m, int n)
 }
 
 
-extern "C" void proj_2d_arr(size_t size, double *arr_in, double *arr_out) 
+// Input is Python sparse CSR like matrix. Do projection for each row.
+extern "C" void proj_csr(size_t size_indptr, int *indptr, double *data, double *data_out)
+{
+	for (size_t i = 0; i < size_indptr-1; i++)
+	{
+		int start_ind = indptr[i];
+		int num_elements = indptr[i+1]-indptr[i];
+		// printf ("%d[%d], ", start_ind, num_elements);
+    	ProjPolytope(data+start_ind, data_out+start_ind, num_elements, num_elements);
+	}
+}
+
+
+extern "C" void proj_vec(size_t size, double *arr_in, double *arr_out)
 {
     ProjPolytope(arr_in, arr_out, size, size);
 }
 
-// https://pgi-jcns.fz-juelich.de/portal/pages/using-c-from-python.html
-// https://stackoverflow.com/questions/5862915/passing-numpy-arrays-to-a-c-function-for-input-and-output
-// https://numba.pydata.org/numba-doc/dev/user/5minguide.html
-// https://stackoverflow.com/questions/5081875/ctypes-beginner
+
 extern "C" void test()
 {
     printf("hello world  dfdsfs \n");

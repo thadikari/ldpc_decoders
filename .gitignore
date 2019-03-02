@@ -2,6 +2,12 @@ codes/*
 data/*
 plots/*
 
+# gcc binary files
+*.a
+*.o
+*.dll
+*.so
+
 # MATLAB mex files
 *.mex*
 
