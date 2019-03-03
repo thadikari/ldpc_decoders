@@ -31,12 +31,6 @@ def proj_vec(arr_in, arr_out=None):
     return arr_out
 
 
-def test_vec():
-    inp = np.array([1.5025, 0.5102, 1.0119, 1.3982, 1.7818, 1.9186, 1.0944, 0.2772, 0.2986, 0.5150])
-    print(inp)
-    print(proj_vec(inp))
-
-
 fun_proj_csr = lib.proj_csr
 fun_proj_csr.argtypes = [ctypes.c_size_t, ndp_int, ndp_dbl, ndp_dbl]
 
@@ -47,21 +41,35 @@ def proj_csr(csr_in):
     return arr_out
 
 
-def test_csr():
-    from scipy.sparse import csr_matrix
-    row = np.array([0, 0, 1, 2, 2, 2])
-    col = np.array([0, 2, 2, 0, 1, 2])
-    data = np.array([1., 0, 3, 1, 0, .6])
-    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html
-    csr = csr_matrix((data, (row, col)), shape=(3, 3), dtype=float)
-    print(csr.toarray())
-    print(proj_csr(csr))
-
-
-def test_all():
-    test_vec()
-    test_csr()
+def proj_rows(mat):
+    arr_out = np.zeros(mat.size, dtype=mat.dtype)
+    indptr = np.arange(mat.shape[0] + 1) * mat.shape[1]
+    fun_proj_csr(indptr.size, indptr, mat[:], arr_out)
+    return arr_out.reshape(mat.shape)
 
 
 if __name__ == "__main__":
-    test_all()
+    import unittest
+
+
+    class TestCase(unittest.TestCase):
+        def test_vec(self):
+            inp = np.array([1.5025, 0.5102, 1.0119, 1.3982, 1.7818, 1.9186, 1.0944, 0.2772, 0.2986, 0.5150])
+            print(proj_vec(inp))
+
+        def test_csr(self):
+            from scipy.sparse import csr_matrix
+            row = np.array([0, 0, 1, 2, 2, 2])
+            col = np.array([0, 2, 2, 0, 1, 2])
+            data = np.array([1., 0, 3, 1, 0, .6])
+            # https://docs.scipy.org/doc/scipy/reference/generated/scipy.sparse.csr_matrix.html
+            csr = csr_matrix((data, (row, col)), shape=(3, 3), dtype=float)
+            print(csr.toarray())
+            print(proj_csr(csr))
+
+        def test_mat(self):
+            data = np.array([[0., .5, 1], [1, 1, 1], [1, 1, 0], [0, .4, .4]])
+            print(proj_rows(data))
+
+
+    unittest.main()

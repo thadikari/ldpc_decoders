@@ -27,10 +27,9 @@ bool sort_compare_de (const NODE& a, const NODE& b)
 }
 
 // Total projection, need to search on alpha
-double* FastProjection(NODE v[], int length)
+void FastProjection(NODE v[], double* results, int length)
 {
 	double zero_tol_offset = 1e-10;
-	double *results = new double[length];
 	bool AllZero = true, AllOne = true;
 	for(int i = 0; i < length; i++)
 	{
@@ -43,13 +42,13 @@ double* FastProjection(NODE v[], int length)
 	{
 		for(int i = 0;i < length; i++)
 			results[i] = 0;
-		return results;
+		return;
 	}
 	if (AllOne && (length%2 == 0)) // exit if the vector should be all one vector.
 	{
 		for(int i = 0;i < length; i++)
 			results[i] = 1;
-		return results;
+		return;
 	}
 
 	NODE *zSort = new NODE[length]; // vector that save the sorted input vector
@@ -88,7 +87,7 @@ double* FastProjection(NODE v[], int length)
 		for(int i = 0; i < length; i++)
 			results[zClip[i].index] = zClip[i].value;
 		delete [] zSort; delete [] zClip;
-		return results;
+		return;
 	}
 
 	double beta = 0;
@@ -246,62 +245,31 @@ double* FastProjection(NODE v[], int length)
 
 	}
 	delete [] zSort; delete [] zClip; delete [] zBetaRep;
-	return results;
 }
 
-void ProjPolytope(double *input, double *output, int m, int n)
+
+// single vector input
+extern "C" void proj_vec(int length, double *arr_in, double *arr_out)
 {
-	int length = m;
 	NODE *v = new NODE[length];
 	for (int i =0; i < length; i++)
 	{
 		v[i].index = i;
-		v[i].value = input[i];
+		v[i].value = arr_in[i];
 	}
-	double *results = FastProjection(v, length);
-    for (int i =0; i < length; i++)
-	{
-        //printf ("%4.2f\n",results[i]);
-        output[i] = results[i];
-	}
-	delete [] results;
+	FastProjection(v, arr_out, length);
+	delete [] v;
 }
 
 
 // Input is Python sparse CSR like matrix. Do projection for each row.
-extern "C" void proj_csr(size_t size_indptr, int *indptr, double *data, double *data_out)
+extern "C" void proj_csr(int length_indptr, int *indptr, double *data_in, double *data_out)
 {
-	for (size_t i = 0; i < size_indptr-1; i++)
+	for (int i = 0; i < length_indptr-1; i++)
 	{
 		int start_ind = indptr[i];
 		int num_elements = indptr[i+1]-indptr[i];
 		// printf ("%d[%d], ", start_ind, num_elements);
-    	ProjPolytope(data+start_ind, data_out+start_ind, num_elements, num_elements);
+    	proj_vec(num_elements, data_in+start_ind, data_out+start_ind);
 	}
-}
-
-
-extern "C" void proj_vec(size_t size, double *arr_in, double *arr_out)
-{
-    ProjPolytope(arr_in, arr_out, size, size);
-}
-
-
-extern "C" void test()
-{
-    printf("hello world  dfdsfs \n");
-    
-    int length = 10;
-    
-    double arr_in[10] = { 1.5025,    0.5102 ,   1.0119 ,   1.3982   , 1.7818   , 1.9186  ,  1.0944,    0.2772  ,  0.2986   , 0.5150};
-    double* arr_out = new double[length];
-    ProjPolytope(arr_in, arr_out, length, length);
-    
-    for (int i =0; i < length; i++)
-	{
-        printf ("%4.8f, ",arr_out[i]);
-	}
-    
-    printf("\n");
-    printf("DONE \n");
 }

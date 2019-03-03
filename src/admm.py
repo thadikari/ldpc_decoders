@@ -2,7 +2,7 @@ from scipy.sparse import coo_matrix
 import numpy as np
 
 import math_utils as mu
-import parity_polytope
+import parity_polytope as pp
 
 
 class ADMM:
@@ -29,7 +29,7 @@ class ADMM:
 
             # update z
             v_vec = x_hat_yy + lambda_vec / self.mu
-            z_new = parity_polytope.proj_csr(self.coo(v_vec).tocsr())
+            z_new = pp.proj_csr(self.coo(v_vec).tocsr())
 
             # update lambda
             lambda_vec[:] = lambda_vec + self.mu * (x_hat_yy - z_new)
