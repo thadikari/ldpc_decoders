@@ -1,6 +1,7 @@
 codes/*
 data/*
 plots/*
+cache/*
 
 # gcc binary files
 *.a
