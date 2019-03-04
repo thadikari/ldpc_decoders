@@ -7,13 +7,14 @@ from collections import OrderedDict
 
 
 def test(args):
-    id_keys = ('channel', 'code', 'decoder', 'max_iter', 'codeword')
+    model = models[args.channel]
+    dec_fac = getattr(model, args.decoder)
+    id_keys = ['channel', 'code', 'decoder', 'codeword'] + dec_fac.id_keys
     id_val = tuple(str(vars(args)[key]) for key in id_keys)
     log = logging.getLogger('.'.join(id_val))
     code = codes.get_code(args.code)
     code_n = code.get_n()
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
-    model = models[args.channel]
     min_wec = args.min_wec
     saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
 
@@ -21,7 +22,7 @@ def test(args):
         log.info('Starting parameter: %f' % param)
 
         channel = model.Channel(param)
-        decoder = getattr(model, args.decoder)(param, code, args.max_iter)
+        decoder = dec_fac(param, code, **vars(args))
         tot, wec, wer, bec, ber = 0, 0, 0., 0, 0.
         start_time = time.time()
 

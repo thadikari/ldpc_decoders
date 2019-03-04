@@ -5,8 +5,10 @@ import math_utils as mu
 
 
 class LP:
-    def __init__(self, parity_mtx, max_iter):
-        self.max_iter = max_iter
+    id_keys = ['max_iter']
+
+    def __init__(self, parity_mtx, **kwargs):
+        self.max_iter = kwargs['max_iter']
         num_chk, num_var = parity_mtx.shape
         num_constraints = np.sum(2 ** (parity_mtx.sum(axis=1) - 1))
         self.mat_ub = np.zeros((num_constraints, num_var), int)

@@ -4,8 +4,10 @@ import numpy as np
 
 
 class BPA:
-    def __init__(self, parity_mtx, max_iter):
-        self.max_iter = max_iter
+    id_keys = ['max_iter']
+
+    def __init__(self, parity_mtx, **kwargs):
+        self.max_iter = kwargs['max_iter']
         self.parity_mtx = parity_mtx
         self.xx, self.yy = np.where(self.parity_mtx)
 
@@ -62,8 +64,8 @@ class BPA:
 
 
 class SPA(BPA):
-    def __init__(self, parity_mtx, max_iter):
-        super().__init__(parity_mtx, max_iter)
+    def __init__(self, parity_mtx, **kwargs):
+        super().__init__(parity_mtx, **kwargs)
         self.prod_rows = lambda d_: mu.prod_nonzero(self.coo(d_), 1)
 
     def decode_(self, var_to_chk, xx, chk_to_var):
@@ -74,8 +76,8 @@ class SPA(BPA):
 
 
 class MSA(BPA):
-    def __init__(self, parity_mtx, max_iter):
-        super().__init__(parity_mtx, max_iter)
+    def __init__(self, parity_mtx, **kwargs):
+        super().__init__(parity_mtx, **kwargs)
         self.sign_rows = lambda d_: mu.prod_nonzero_sign(self.coo(d_), 1)
         self.to_csr = lambda d_: self.coo(d_).tocsr()
         self.min_rows = lambda csr: mu.csr_csc_argmax(-csr)

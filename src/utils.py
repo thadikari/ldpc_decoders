@@ -17,15 +17,18 @@ def setup_parser(code_names, channel_names, decoder_names):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('channel', help='channel', choices=channel_names)
-    parser.add_argument('code', help='code', choices=code_names)
+    parser.add_argument('code', help='code name', choices=code_names)
     parser.add_argument('decoder', help='decoder', choices=decoder_names)
-
-    parser.add_argument('--params', nargs='+', type=float, default=[.1, .01])
 
     parser.add_argument('--codeword', help='-1:random from cb, 0:all-zero, 1:all-ones', default=0, type=int,
                         choices=[-1, 0, 1])
     parser.add_argument('--min-wec', help='min word errors to accumulate', default=100, type=int)
-    parser.add_argument('--max-iter', help='max iterations in bp', default=10, type=int)
+    parser.add_argument('--params', nargs='+', type=float, default=[.1, .01])
+
+    parser.add_argument('--max-iter', help='max iterations in iterative decoders', default=10, type=int)
+    parser.add_argument('--mu', help='mu', default=3., type=float)
+    parser.add_argument('--eps', help='epsilon', default=1e-5, type=float)
+
     parser.add_argument('--log-freq', help='log frequency in seconds', default=5., type=float)
     return bind_parser_common(parser)
 
@@ -52,10 +55,10 @@ def setup_file_logger(path, name, level=logging.DEBUG):
 
 
 class TestCase(unittest.TestCase):
-    def sample(self, code, param, decoders, max_iter, x, y):
+    def sample(self, code, param, decoders, x, y, **kwargs):
         x_, y_ = np.array(x), np.array(y)
         for decoder in decoders:
-            dec = decoder(param, codes.get_code(code), max_iter)
+            dec = decoder(param, codes.get_code(code), **kwargs)
             # print(dec, x_, dec.decode(y_))
             self.assertTrue((dec.decode(y_) == x_).all())
             # spa = SPA(param, codes.get_code(code))

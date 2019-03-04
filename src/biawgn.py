@@ -28,29 +28,39 @@ class LLR:
 
 
 class SPA(LLR):
-    def __init__(self, snr_in_db, code, max_iter):
-        super().__init__(snr_in_db, bpa.SPA(code.parity_mtx, max_iter))
+    id_keys = bpa.SPA.id_keys
+
+    def __init__(self, snr_in_db, _code, **kwargs):
+        super().__init__(snr_in_db, bpa.SPA(_code.parity_mtx, **kwargs))
 
 
 class MSA(LLR):
-    def __init__(self, snr_in_db, code, max_iter):
-        super().__init__(snr_in_db, bpa.MSA(code.parity_mtx, max_iter))
+    id_keys = bpa.MSA.id_keys
+
+    def __init__(self, snr_in_db, _code, **kwargs):
+        super().__init__(snr_in_db, bpa.MSA(_code.parity_mtx, **kwargs))
 
 
 class LP(LLR):
-    def __init__(self, p, code, max_iter):
-        super().__init__(p, lp.LP(code.parity_mtx, max_iter))
+    id_keys = lp.LP.id_keys
+
+    def __init__(self, p, _code, **kwargs):
+        super().__init__(p, lp.LP(_code.parity_mtx, **kwargs))
 
 
 class ADMM(LLR):
-    def __init__(self, p, code, max_iter):
-        super().__init__(p, admm.ADMM(code.parity_mtx, max_iter))
+    id_keys = admm.ADMM.id_keys
+
+    def __init__(self, p, _code, **kwargs):
+        super().__init__(p, admm.ADMM(_code.parity_mtx, **kwargs))
 
 
 class ML:
-    def __init__(self, snr_in_db, code, max_iter):
+    id_keys = []
+
+    def __init__(self, snr_in_db, _code, **kwargs):
         # map {0,1} to {-1,+1}
-        self.cb = code.cb
+        self.cb = _code.cb
         self.noise_var = noise_var(snr_in_db)
 
     def decode(self, y):  # incoming cw \reals, outgoing cw {0,1}
@@ -63,12 +73,15 @@ class ML:
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, SPA, MSA, LP, ADMM]
-        self.sample('4_2_test', 1, decoders, 10,
+        kwargs = {'max_iter': 10, 'mu': 3., 'eps': 1e-5}
+        self.sample('4_2_test', 1, decoders,
                     [1, 1, 0, 1, 1],
-                    [1, 1, 1.6, .9, 1])
-        self.sample('7_4_hamming', .1, decoders, 10,
+                    [1, 1, 1.6, .9, 1],
+                    **kwargs)
+        self.sample('7_4_hamming', .1, decoders,
                     [1, 0, 0, 1, 1, 0, 0],
-                    [1, -1, 1.1, 1, 1, -1, -1])
+                    [1, -1, 1.1, 1, 1, -1, -1],
+                    **kwargs)
 
 
 if __name__ == "__main__":

@@ -19,9 +19,11 @@ class Channel:
 
 
 class ML:
-    def __init__(self, p, code, max_iter):
+    id_keys = []
+
+    def __init__(self, p, _code, **kwargs):
         self.log_p, self.log_1p = np.log(p), np.log(1 - p)
-        self.cb = code.cb
+        self.cb = _code.cb
         self.n = self.cb.shape[1]
 
     def decode(self, y):
@@ -44,23 +46,29 @@ class LLR:
 
 
 class LP(LLR):
-    def __init__(self, p, code, max_iter):
-        super().__init__(lp.LP(code.parity_mtx, max_iter))
+    id_keys = lp.LP.id_keys
+
+    def __init__(self, p, _code, **kwargs):
+        super().__init__(lp.LP(_code.parity_mtx, **kwargs))
 
 
 class ADMM(LLR):
-    def __init__(self, p, code, max_iter):
-        super().__init__(admm.ADMM(code.parity_mtx, max_iter))
+    id_keys = admm.ADMM.id_keys
+
+    def __init__(self, p, _code, **kwargs):
+        super().__init__(admm.ADMM(_code.parity_mtx, **kwargs))
 
 
 class SPA:
-    def __init__(self, p, code, max_iter):
-        self.max_iter = max_iter
+    id_keys = ['max_iter']
+
+    def __init__(self, p, _code, **kwargs):
+        self.max_iter = kwargs['max_iter']
         self.symbols = np.array([2, 1, 0])  # 2 means erasure
         self.messages = np.array([-1, 1, 0])  # 0 WP1, 1 WP1, 0 OR 1 WP0.5
-        self.xx, self.yy = np.where(code.parity_mtx)
+        self.xx, self.yy = np.where(_code.parity_mtx)
 
-        coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=code.parity_mtx.shape)
+        coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=_code.parity_mtx.shape)
         self.sum_rows = lambda d_: mu.sum_axis(coo(d_), 1)
         self.sum_cols = lambda d_: mu.sum_axis(coo(d_), 0)
 
@@ -112,12 +120,15 @@ class MSA(SPA): pass
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, LP, SPA, ADMM]
-        self.sample('4_2_test', 1 / 3, decoders, 10,
+        kwargs = {'max_iter': 10, 'mu': 3., 'eps': 1e-5}
+        self.sample('4_2_test', 1 / 3, decoders,
                     [1, 1, 0, 1, 1],
-                    [1, 2, 0, 1, 2])
-        self.sample('7_4_hamming', .1, decoders, 10,
+                    [1, 2, 0, 1, 2],
+                    **kwargs)
+        self.sample('7_4_hamming', .1, decoders,
                     [1, 0, 0, 1, 1, 0, 0],
-                    [2, 0, 2, 1, 1, 0, 2])
+                    [2, 0, 2, 1, 1, 0, 2],
+                    **kwargs)
 
 
 if __name__ == "__main__":

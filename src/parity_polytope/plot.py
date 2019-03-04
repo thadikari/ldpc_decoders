@@ -106,6 +106,12 @@ def main(args):
                 for i in range(len(current)): edge(current, i)
                 update(current)
 
+            def on_click(event):
+                if event.inaxes is not None:
+                    current[:] = np.array((event.xdata, event.ydata))
+                    update(current)
+
+            if dim == 2: fig.canvas.mpl_connect('button_press_event', on_click)
             timer = fig.canvas.new_timer(interval=interval, callbacks=[(on_timer, [], {})])
             timer.start()
 

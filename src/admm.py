@@ -6,12 +6,13 @@ import parity_polytope as pp
 
 
 class ADMM:
-    def __init__(self, parity_mtx, max_iter):
+    id_keys = ['mu', 'eps']
+
+    def __init__(self, parity_mtx, **kwargs):
+        self.mu = kwargs['mu']
+        thresh = (kwargs['eps'] ** 2) * parity_mtx.sum()
         self.xx, self.yy = np.where(parity_mtx)
         self.var_deg = parity_mtx.sum(axis=0)
-        self.mu = 3.
-        eps = 1e-5
-        thresh = (eps ** 2) * parity_mtx.sum()
         self.is_close = lambda a_1, a_2: ((a_1 - a_2) ** 2).sum() < thresh
         self.coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=parity_mtx.shape)
         self.sum_cols = lambda d_: mu.sum_axis(self.coo(d_), 0)
