@@ -43,15 +43,21 @@ case ${CASE} in
     "HMG") # all hamming code sims
         CMN="--codeword=1 --min-wec=300"
         PARAMS=".5 .4 .3 .2 .1 .08 .06 .04 .02"
-        DECS=("ML" "LP" "SPA")
+        DECS=("ML" "LP" "SPA" "ADMM")
         list_DEC "bec 7_4_hamming" "$CMN --params $PARAMS" DECS[@]
 
         PARAMS="$PARAMS .25 .15 .01 .008 .006 .004 .002"
-        DECS=("ML" "LP" "SPA" "MSA")
+        DECS=("ML" "LP" "SPA" "MSA" "ADMM")
         list_DEC "bsc 7_4_hamming" "$CMN --params $PARAMS" DECS[@]
 
         PARAMS="2 2.5 3 3.5 4 4.5 5 5.5 6 6.6 7"
         list_DEC "biawgn 7_4_hamming" "$CMN --params $PARAMS" DECS[@]
+        ;;
+    "MAR") # margulis code sims
+        CONFIG="margulis ADMM --codeword=1 --min-wec=100 --params"
+        exc "biawgn $CONFIG .5 .75 1. 1.25 1.5 1.75 2. 2.25 2.5 2.75 3.0"
+        exc "bsc $CONFIG .1 .09 .08 .07 .06 .05 .04"
+        exc "bec $CONFIG .5 .475 .45 .425 .4 .375 .35 .34 .33 .325 .32 .31 .3"
         ;;
     "BEC")
         ARGS="--params .5 .475 .45 .425 .4 .375 .35 .34 .33 .325 .32 .31 .3"

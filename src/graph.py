@@ -25,7 +25,7 @@ def plot_(pairs, style, label):
 def_title = lambda args: ', '.join((args.channel.upper(), args.code))
 
 
-def main(args):
+def graph_(args):
     log = logging.getLogger()
     data_list = []
     for file_name in utils.get_data_file_list(args.data_dir):
@@ -45,6 +45,10 @@ def main(args):
     def extra_filter(it):
         if 'max_iter' in it.keys() and args.max_iter is not None:
             return int(it['max_iter']) == args.max_iter
+        # elif 'eps' in it.keys() and args.eps is not None:
+        #     return float(it['eps']) == args.eps
+        # elif 'mu' in it.keys() and args.mu is not None:
+        #     return float(it['mu']) == args.mu
         else:
             return True
 
@@ -139,8 +143,12 @@ def setup_parser():
                                  'max_iter',  # compare iterations cap
                                  'compare'  # compare with another
                                  ])
+
     parser.add_argument('--max-iter', help='filter out multiple matches', type=int)
-    parser.add_argument('--extra', help='code names to compare with')
+    parser.add_argument('--mu', help='mu', type=float)
+    parser.add_argument('--eps', help='epsilon', type=float)
+    parser.add_argument('--extra', help='code names to compare with in [type=compare] plots')
+
     parser.add_argument('--xlim', help='x-axis range', nargs=2, type=float)
     parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
     parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
@@ -151,12 +159,15 @@ def setup_parser():
     return utils.bind_parser_common(parser)
 
 
-if __name__ == "__main__":
-    utils.setup_console_logger()
-    args = setup_parser().parse_args()
+def main(args):
     if args.agg: matplotlib.use('Agg')
     import matplotlib.pyplot
 
     global plt
     plt = matplotlib.pyplot
-    main(args)
+    graph_(args)
+
+
+if __name__ == "__main__":
+    utils.setup_console_logger()
+    main(setup_parser().parse_args())

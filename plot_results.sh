@@ -39,9 +39,15 @@ list () {
 
 case ${CASE} in
     "HMG") # all hamming code sims
-        exc "bec 7_4_hamming ML SPA LP comp_dec --error wer" "BEC"
-        exc "bsc 7_4_hamming ML SPA MSA LP comp_dec --error wer" "BSC"
-        exc "biawgn 7_4_hamming ML SPA MSA LP comp_dec --error wer" "BIAWGN"
+        exc "bec 7_4_hamming ML SPA LP ADMM comp_dec --error ber" "BEC"
+        exc "bsc 7_4_hamming ML SPA MSA LP ADMM comp_dec --error ber" "BSC"
+        exc "biawgn 7_4_hamming ML SPA MSA LP ADMM comp_dec --error ber" "BIAWGN"
+        ;;
+    "MAR") # margulis code sims
+        CONFIG="margulis ADMM single"
+        exc "biawgn $CONFIG" "BIAWGN"
+        exc "bec $CONFIG" "BEC"
+        exc "bsc $CONFIG" "BSC"
         ;;
     "BEC")
         plot_1 bec SPA "--xlim .3 .5 --ylim 2e-7 .5 --max-iter=10" "--max-iter=10 --xlim .3 .5 --ylim 3e-5 .5" ""
