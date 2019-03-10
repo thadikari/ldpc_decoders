@@ -85,14 +85,14 @@ def load_parity_mtx(file_path):
         lines = tuple(line for line in fp if len(line.split()) > 0)
         max_ind = max(tuple(max(map(int, line.split())) for line in lines))
         min_ind = min(tuple(min(map(int, line.split())) for line in lines))
-        if min_ind not in [0, 1]: raise "Minimum index is not 0 or 1."
+        if min_ind not in [0, 1]: raise Exception('Minimum index is not 0 or 1.')
         mtx = np.zeros((len(lines), max_ind + (0 if min_ind == 1 else 1)), int)
         chk_num = 1
         for line in lines:
             for var_num in map(int, line.split()):
                 mtx[chk_num - 1, var_num - 1] = 1
             chk_num += 1
-    return mtx
+        return mtx
 
 
 def rand_reg_ldpc(n, l, r):
@@ -118,17 +118,20 @@ def rand_reg_ldpc_test():
     print(xx[xx[:, 0].argsort()])
 
 
+def save_parity_mtx(parity_mtx, code_name):
+    file_path = os.path.join(file_codes_dir, '%s.txt' % code_name)
+    with open(file_path, 'w') as fp:
+        for chk_ind in range(parity_mtx.shape[0]):
+            ind = np.where(parity_mtx[chk_ind, :])[0] + 1
+            fp.writelines(' '.join(map(str, ind)) + '\n')
+
+
 def gen_rand_reg_ldpc(args):
     n, l, r = args.n, args.l, args.r
     for i in range(args.count):
         parity_mtx = rand_reg_ldpc(n, l, r)
         code_name = '%d_%d_%d_rand_ldpc_%d' % (n, l, r, i + 1)
-        file_path = os.path.join(file_codes_dir, '%s.txt' % code_name)
-        with open(file_path, 'w') as fp:
-            for chk_ind in range(parity_mtx.shape[0]):
-                ind = np.where(parity_mtx[chk_ind, :])[0] + 1
-                fp.writelines(' '.join(map(str, ind)) + '\n')
-
+        save_parity_mtx(parity_mtx, code_name)
         verify_rand_reg_ldpc(code_name, l, r)
 
 
