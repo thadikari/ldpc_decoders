@@ -25,14 +25,15 @@ log () { echo "submit|$RUN_ID|$1"; }
 run () { log ">> $1"; eval "$1"; }
 list () {
     declare -a LIST=("${!1}")
-    for CASE in ${LIST[@]}; do run "./run_sims.sh $CASE PARA --data-dir=$SCRATCH" & done
+    for CASE in ${LIST[@]}; do run "./run_sims.sh PARA $CASE --data-dir=$SCRATCH" & done
 }
 
 run "cd /home/s/sdraper/tharindu/projects/decoders"
 run "pwd"
 run "source niagara/setup_env.sh"
 
-CASES=("BEC" "BSC_MSA" "BIAWGN_MSA" "BSC_SPA" "BIAWGN_SPA")
+# see cases defined in simulations.py
+CASES=("MAR" "REG_BAD" "REG_ENS" "IREG_ENS")
 list CASES[@]  # TODO: split cases by Array Task Count
 
 log "Waiting..."

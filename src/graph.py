@@ -10,7 +10,7 @@ x_labels = {'bsc': 'Crossover probability',
             'bec': 'Erasure probability',
             'biawgn': 'E_b/N in dB for E_b=1'}
 lines = {'ML': 'b:', 'SPA': 'g--', 'MSA': 'r-.', 'LP': 'm-+', 'ADMM': 'k--'}
-line_styles2 = ['b--', 'r-']
+line_styles4 = ['b--', 'r-', 'g-.', 'm:']
 line_styles = list(it1 + it2
                    for it1 in ['-', '--', '-.', ':']
                    for it2 in ['b', 'g', 'r'])
@@ -59,6 +59,12 @@ def graph_(args):
         else:
             return ll[0]
 
+    prefix_code = lambda ar_: ar_.get('prefix', '') + ar_.get('code', '')
+    prefix_or_code = lambda it, ar_: (it.get('code', '') == args.code or
+                                      it.get('prefix', '') == args.code or
+                                      it.get('code', '') == args.extra or
+                                      it.get('prefix', '') == args.extra)
+
     if args.type == 'single':
         chk = lambda it: it.get('code', '') == args.code and \
                          it.get('decoder', '') == args.decoder[0] and \
@@ -68,25 +74,24 @@ def graph_(args):
         title = def_title(args)
 
     elif args.type == 'compare':
-        chk = lambda it: (it.get('code', '') == args.code or \
-                          it.get('prefix', '') == args.code or \
-                          it.get('code', '') == args.extra or \
-                          it.get('prefix', '') == args.extra) and \
+        chk = lambda it: prefix_or_code(it, args) and \
                          it.get('decoder', '') == args.decoder[0] and \
                          extra_filter(it)
-        for data, style in zip(filter_data(chk), line_styles2):
-            plot_(data[args.error], style,
-                  data.get('prefix', '') + data.get('code', ''))
+        for data, style in zip(filter_data(chk), line_styles4):
+            plot_(data[args.error], style, prefix_code(data))
         title = args.channel.upper() + ', %s decoder' % args.decoder[0]
 
     elif args.type == 'comp_dec':
-        chk = lambda it: it.get('code', '') == args.code and \
+        chk = lambda it: prefix_or_code(it, args) and \
                          it.get('decoder', '') in args.decoder and \
                          extra_filter(it)
-        for data in filter_data(chk):
+        filtered = filter_data(chk)
+        same_code = len(set([prefix_code(data) for data in filtered])) <= 1  # check if all are for same code
+        for data, style in zip(filtered, line_styles4):
             decoder = data['decoder']
-            plot_(data[args.error], lines[decoder], decoder)
-        title = def_title(args)
+            leg = decoder if same_code else '%s-%s' % (decoder, prefix_code(data))
+            plot_(data[args.error], style, leg)
+        title = def_title(args) if same_code else 'Comparison of decoders'
 
     elif args.type == 'ensemble':
         chk = lambda it: it.get('decoder', '') == args.decoder[0] and \
