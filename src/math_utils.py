@@ -1,7 +1,7 @@
 import scipy.sparse as sp
 import numpy as np
 
-mtx_to_vec = lambda mtx: np.asarray(mtx).flatten()
+mtx_to_vec = lambda mtx: np.asarray(mtx).ravel()
 
 sum_axis = lambda coo, axis: mtx_to_vec(coo.sum(axis=axis))
 

@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import os
 
 
 def bi(size):
@@ -51,17 +52,7 @@ class Model:
         self.Y_hat, Y_hat_logits, self.weights = create_fcnet(self.X, layers + [dim], tf.nn.relu, tf.nn.sigmoid)
         # Y_hat, Y_hat_logits, self.weights = create_fcnet(self.X, layers + [dim_vec], tf.identity, tf.identity)
         self.dim = dim
-
-    def setup_train(self):
-        self.loss = tf.reduce_mean(tf.square(self.Y_hat - self.Y))
-        start_rate = .001
-        self.opt = tf.train.AdamOptimizer(start_rate).minimize(loss=self.loss)
-        init_op = tf.global_variables_initializer()
         self.sess = tf.Session()
-        self.sess.run(init_op)
-
-    def step(self, X, Y):
-        self.sess.run(self.opt, feed_dict={self.X: X, self.Y: Y})
 
     def eval_rows(self, X):
         return self.sess.run(self.Y_hat, feed_dict={self.X: X})
@@ -69,17 +60,14 @@ class Model:
     def eval_vec(self, X):
         return self.eval_rows(X[np.newaxis, :])[0, :]
 
-    def eval_loss(self, X, Y):
-        return self.sess.run(self.loss, feed_dict={self.X: X, self.Y: Y})
-
     def path(self):
-        return '../../cache/model_%d.ckpt' % self.dim
+        dir_name = os.path.dirname(__file__)
+        return os.path.join(dir_name, '..', '..', 'cache', 'model_%d.ckpt' % self.dim)
 
     def save(self, saver):
         saver.save(self.sess, self.path())
 
     def restore(self, saver):
-        self.sess = tf.Session()
         saver.restore(self.sess, self.path())
 
 

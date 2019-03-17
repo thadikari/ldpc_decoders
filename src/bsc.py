@@ -52,6 +52,13 @@ class ADMM(LLR):
         super().__init__(p, admm.ADMM(_code.parity_mtx, **kwargs))
 
 
+class ADMMA(LLR):
+    id_keys = admm.ADMMA.id_keys
+
+    def __init__(self, p, _code, **kwargs):
+        super().__init__(p, admm.ADMMA(_code.parity_mtx, **kwargs))
+
+
 class ML:
     id_keys = []
 

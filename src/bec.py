@@ -59,6 +59,13 @@ class ADMM(LLR):
         super().__init__(admm.ADMM(_code.parity_mtx, **kwargs))
 
 
+class ADMMA(LLR):
+    id_keys = admm.ADMMA.id_keys
+
+    def __init__(self, p, _code, **kwargs):
+        super().__init__(admm.ADMMA(_code.parity_mtx, **kwargs))
+
+
 class SPA:
     id_keys = ['max_iter']
 
