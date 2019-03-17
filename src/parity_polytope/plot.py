@@ -3,10 +3,9 @@ from scipy.spatial import ConvexHull
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-import time
 
-import __init__ as pp
-import model as md
+import exact
+import apprx
 
 
 def plot_pp(dim):
@@ -39,12 +38,12 @@ def main(args):
     ax_ = lambda d_, m_, l_: ax.plot(*d_, m_, label=l_, **config)[0]
     lines_ = lambda d_, e_, a_: (ax_(d_, 'g^', 'Data'), ax_(e_, 'bs', 'Exact'), ax_(a_, 'ro', 'Apprx'))
 
-    model = md.load_model(dim)
+    model = apprx.load_model(dim)
 
     if demo == 'static':
         config['markersize'] = 10
         dat = np.random.rand(5, dim)
-        prj = pp.proj_rows(dat)
+        prj = exact.proj_rows(dat)
         apx = model.eval_rows(dat)
         lines_(dat.T, prj.T, apx.T)
     else:
@@ -59,7 +58,7 @@ def main(args):
             if dim == 3: line.set_3d_properties(dat[2])
 
         def update(dat):
-            prj, apx = pp.proj_vec(dat), model.eval_vec(dat)
+            prj, apx = exact.proj_vec(dat), model.eval_vec(dat)
             set_data(l_dat, dat)
             set_data(l_prj, prj)
             set_data(l_apx, apx)

@@ -1,8 +1,6 @@
 import tensorflow as tf
 import numpy as np
 
-import __init__ as pp
-
 
 def bi(size):
     with tf.variable_scope(tf.get_default_graph().get_name_scope()):  # , reuse=tf.AUTO_REUSE):
@@ -85,18 +83,6 @@ class Model:
         saver.restore(self.sess, self.path())
 
 
-def reset_all(seed=0):
-    np.random.seed(seed)
-    tf.reset_default_graph()
-    tf.set_random_seed(seed)
-
-
-def gen_data(count, dim):
-    X = np.random.rand(count, dim)
-    Y = pp.proj_rows(X)
-    return X, Y
-
-
 def make_model(dim):
     return Model(dim, [20, 20])
 
@@ -105,29 +91,3 @@ def load_model(dim):
     model = make_model(dim)
     model.restore(tf.train.Saver())
     return model
-
-
-def test(dim):
-    model = load_model(dim)
-    test_data = gen_data(100, dim)
-    # print(model.eval_loss(*test_data))
-    print(model.eval_vec(np.array((1., .4))))
-
-
-def train(dim):
-    model = make_model(dim)
-    saver = tf.train.Saver()
-    model.setup_train()
-    test_data = gen_data(100, dim)
-    for step in range(0, 10000):
-        model.step(*gen_data(1000, dim))
-        if step % 100 == 0:
-            print(['step', step, 'loss', model.eval_loss(*test_data)])
-
-    model.save(saver)
-
-
-if __name__ == '__main__':
-    reset_all()
-    train(3)
-    # test(2)

@@ -9,7 +9,7 @@ from collections import OrderedDict
 def test(args):
     model = models[args.channel]
     dec_fac = getattr(model, args.decoder)
-    id_keys = ['channel', 'code', 'decoder', 'codeword'] + dec_fac.id_keys
+    id_keys = ['channel', 'code', 'decoder', 'codeword', 'min_wec'] + dec_fac.id_keys
     id_val = tuple(str(vars(args)[key]) for key in id_keys)
     log = logging.getLogger('.'.join(id_val))
     code = codes.get_code(args.code)
