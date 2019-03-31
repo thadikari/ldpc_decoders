@@ -1,4 +1,6 @@
+from scipy.sparse import csr_matrix
 import matplotlib.pyplot as plt
+import math_utils as mu
 import numpy as np
 import argparse
 
@@ -48,6 +50,8 @@ def simulate_cw(gen_mtx):
         # print('est:', hist.shape)
         if ret:
             # print('success---------', num_sym)
+            # assert ((msg == est).all())
+            # print(np.abs(msg - est).sum())
             return num_sym
         else:
             pass
@@ -59,24 +63,16 @@ def simulate_cw(gen_mtx):
 def decode(rcv, gen_col, est):
     rcv, gen_col = rcv.copy(), gen_col.copy()
     # print('rank', np.linalg.matrix_rank(gen_col))
-    while gen_col.sum() != 0:
-        # print('----------------------------')
-        ripple = gen_col.sum(axis=0) == 1
+    spr = csr_matrix(gen_col)
+    while spr.data.sum() != 0:
+        ripple = mu.mtx_to_vec(spr.sum(axis=0)) == 1
         if not ripple.any(): return False
-        ripple_col = gen_col[:, ripple]
-        # print(ripple_col.shape)
+        ripple_col = spr[:, ripple]
         xx, yy = np.nonzero(ripple_col)
-        # print(gen_col)
-        # print(ripple_col)
-        # print('xx, yy', xx, yy)
-        # print('ddd', rcv[ripple][yy])
         est[xx] = rcv[ripple][yy]
-        rcv += est @ gen_col
+        rcv += est @ spr
         rcv %= 2
-        gen_col[xx, :] = 0
-        # print(msg)
-        # print(rcv)
-        # print(gen_col)
+        for i in xx: spr.data[spr.indptr[i]:spr.indptr[i+1]] = 0
     return True
 
 
@@ -141,7 +137,7 @@ def setup_parser():
 
 
 if __name__ == "__main__":
-    np.random.seed(2)
+    np.random.seed(5)
     # get_soliton(10000, 0.2, 0.05, True)
     # test_decoder()
     main(setup_parser().parse_args())
