@@ -44,8 +44,8 @@ def main(args):
 
         avg[err] = ll
 
-    id_keys = ('channel', 'prefix', 'decoder')
-    id_val = (args.channel, args.prefix, args.decoder)
+    id_keys = ('type', 'channel', 'prefix', 'decoder')
+    id_val = ('stats', args.channel, args.prefix, args.decoder)
     saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
     saver.add_meta('sources', src_list)
     saver.add_all(avg)

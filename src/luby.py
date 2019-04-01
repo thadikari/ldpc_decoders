@@ -1,6 +1,5 @@
 from scipy.sparse import csc_matrix
 from multiprocessing import Pool
-import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 import logging
@@ -33,15 +32,10 @@ def test_sim():
     omega = get_soliton(k, 0.1, 0.5)
     arr = [simulate_cw(i, omega, n)[1]
            for i in range(sim_count)]
+
     print(arr)
-    plot_hist(arr, k, n)
-
-
-def plot_hist(arr, k, n):
-    plt.hist(arr)
-    plt.autoscale(enable=True, axis='x', tight=True)
-    plt.xlim(k, n)
-    plt.show()
+    import luby_graph
+    luby_graph.plot_hist(arr, k, n, .1)
 
 
 def simulate_cw(sim_id, omega, n):
@@ -55,7 +49,7 @@ def simulate_cw(sim_id, omega, n):
     ret_val = n
     # send symbols till get decoded
     for num_sym in range(k, n + 1):
-        print('sim_id', sim_id, 'num_sym', num_sym)
+        # print('sim_id', sim_id, 'num_sym', num_sym)
         rcv = snt[0:num_sym]
         gen_col = gen_mtx[:, :num_sym]
         ret = decode(rcv, gen_col, est)
@@ -111,25 +105,13 @@ def get_robust(k, c, delta):
 
 
 def get_soliton(k, c, delta, plot=False):
-    cut = 50
-    bar_width = 0.32
-    bar_plt = lambda ind, dst, name, clr: \
-        plt.bar(np.arange(1, cut + 1) + bar_width * ind,
-                dst[:cut], bar_width, linewidth=0,
-                label=name, color=clr)
-
     rho = get_ideal(k)
     tau = get_robust(k, c, delta)
     mu = (rho + tau) / (rho + tau).sum()
 
     if plot:
-        bar_plt(0, rho, 'rho', 'r')
-        bar_plt(1, tau, 'tau', 'b')
-        bar_plt(2, mu, 'mu', 'y')
-
-        plt.autoscale(enable=True, axis='x', tight=True)
-        plt.legend()
-        plt.show()
+        import luby_graph
+        luby_graph.plot_soliton(rho, tau, mu, 50)
 
     return mu
 
@@ -166,8 +148,9 @@ def exec_pool(args):
         utils.setup_file_logger(args.data_dir, 'luby', log_level)
 
     id_keys = ['k', 'n', 'c', 'delta']
-    id_val = tuple(str(vars(args)[key]) for key in id_keys)
-    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
+    id_val = [str(vars(args)[key]) for key in id_keys]
+    saver = utils.Saver(args.data_dir, list(
+        zip(['type'] + id_keys, ['luby'] + id_val)))
     log = logging.getLogger('.'.join(id_val))
 
     k, n, arr = args.k, args.n, []
@@ -190,8 +173,8 @@ def exec_pool(args):
 if __name__ == "__main__":
     # get_soliton(10000, 0.2, 0.05, True)
     # test_decoder()
-    test_sim()
-    # exec_pool(setup_parser().parse_args())
+    # test_sim()
+    exec_pool(setup_parser().parse_args())
 
-    # Usage: python src/luby.py 100 170 .1 .5 10
-    # Usage: python src/luby.py 10000 12000 .1 .5 250 --pool=40 --data-dir=$SCRATCH
+    # Usage: python -u src/luby.py 100 170 .1 .5 10
+    # Usage: python -u src/luby.py 10000 12000 .1 .5 250 --pool=40 --data-dir=$SCRATCH

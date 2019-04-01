@@ -10,13 +10,14 @@ def test(args):
     model = models[args.channel]
     dec_fac = getattr(model, args.decoder)
     id_keys = ['channel', 'code', 'decoder', 'codeword', 'min_wec'] + dec_fac.id_keys
-    id_val = tuple(str(vars(args)[key]) for key in id_keys)
+    id_val = [str(vars(args)[key]) for key in id_keys]
     log = logging.getLogger('.'.join(id_val))
     code = codes.get_code(args.code)
     code_n = code.get_n()
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     min_wec = args.min_wec
-    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
+    saver = utils.Saver(args.data_dir, list(
+        zip(['type'] + id_keys, ['simulation'] + id_val)))
 
     for param in args.params:
         log.info('Starting parameter: %f' % param)

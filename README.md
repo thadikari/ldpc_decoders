@@ -57,3 +57,15 @@ Checkout `assests` branch to see all pre-compupted results. These include differ
 * `python src/graph.py bec 1200_3_6_ldpc SPA single --error ber`
 * `python src/graph.py bsc 7_4_hamming SPA ML comp_dec --error wer`
 * See [`plot_results.py`](../master/plot_results.py) for more.
+
+
+### Generating optimal irregular LDPC codes
+First of the following plots the density evolution while the second generates the optimal irregular distribution a given check node distribution (rho).
+* `python src/ldpc.py plt`
+* `python src/ldpc.py irg --count=10 --len=1200 --rho=5 --rate=.5`
+
+
+### Luby-Transform (LT) code
+Execute the following to reproduce the Figure 50.4 (histogram for LT code with length 10000) in Information Theory, Inference, and Learning Algorithms by David J.C. MacKay. Replace <c> in the first command with 0.01, 0.03, 0.1.
+* `python -u src/luby.py 10000 12000 <c> .5 250 --pool=4`
+* `python src/luby_graph.py .01 .03 .1`

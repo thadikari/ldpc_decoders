@@ -30,6 +30,7 @@ def graph_(args):
     data_list = []
     for file_name in utils.get_data_file_list(args.data_dir):
         data = utils.load_json(os.path.join(args.data_dir, file_name))
+        if data['type'] != 'simulation': continue
         if data['channel'] == args.channel: data_list.append((file_name, data))
 
     def filter_data(expr, comp=None):
