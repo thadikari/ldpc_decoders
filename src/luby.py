@@ -1,8 +1,12 @@
-from scipy.sparse import csr_matrix
+from scipy.sparse import csc_matrix
+from multiprocessing import Pool
 import matplotlib.pyplot as plt
-import math_utils as mu
 import numpy as np
 import argparse
+import logging
+
+import math_utils as mu
+import utils
 
 
 def get_gen_mat(omega, n):
@@ -23,26 +27,35 @@ def get_gen_mat(omega, n):
     return gen_mtx
 
 
-def main(args):
+def test_sim():
     k, n = 100, 170
-    sim_count = 100
+    sim_count = 3
     omega = get_soliton(k, 0.1, 0.5)
-    arr = [simulate_cw(get_gen_mat(omega, n))
-           for _ in range(sim_count)]
+    arr = [simulate_cw(i, omega, n)[1]
+           for i in range(sim_count)]
+    print(arr)
+    plot_hist(arr, k, n)
+
+
+def plot_hist(arr, k, n):
     plt.hist(arr)
     plt.autoscale(enable=True, axis='x', tight=True)
     plt.xlim(k, n)
     plt.show()
 
 
-def simulate_cw(gen_mtx):
-    k, n = gen_mtx.shape
+def simulate_cw(sim_id, omega, n):
+    # return sim_id, sim_id + 99
+    np.random.seed(sim_id)
+    k = len(omega)
+    gen_mtx = csc_matrix(get_gen_mat(omega, n))
     msg = np.random.choice(a=[0, 1], size=k)
-    snt = msg @ gen_mtx % 2
+    snt = (msg @ gen_mtx) % 2
     est = np.zeros(k, dtype=int)
+    ret_val = n
     # send symbols till get decoded
     for num_sym in range(k, n + 1):
-        # print('num_sym', num_sym)
+        print('sim_id', sim_id, 'num_sym', num_sym)
         rcv = snt[0:num_sym]
         gen_col = gen_mtx[:, :num_sym]
         ret = decode(rcv, gen_col, est)
@@ -52,27 +65,30 @@ def simulate_cw(gen_mtx):
             # print('success---------', num_sym)
             # assert ((msg == est).all())
             # print(np.abs(msg - est).sum())
-            return num_sym
+            ret_val = num_sym
+            break
         else:
             pass
             # print('retry')
     # print('fail')
-    return n  # decoding failure
+    return sim_id, ret_val  # decoding failure
 
 
 def decode(rcv, gen_col, est):
-    rcv, gen_col = rcv.copy(), gen_col.copy()
-    # print('rank', np.linalg.matrix_rank(gen_col))
-    spr = csr_matrix(gen_col)
-    while spr.data.sum() != 0:
-        ripple = mu.mtx_to_vec(spr.sum(axis=0)) == 1
+    csc = csc_matrix(gen_col)
+    csc.data = csc.data.copy()
+    rcv = rcv.copy()
+    while csc.data.sum() != 0:
+        ripple = mu.mtx_to_vec(csc.sum(axis=0)) == 1
         if not ripple.any(): return False
-        ripple_col = spr[:, ripple]
+        ripple_col = csc[:, ripple]
         xx, yy = np.nonzero(ripple_col)
         est[xx] = rcv[ripple][yy]
-        rcv += est @ spr
+        rcv += est @ csc
         rcv %= 2
-        for i in xx: spr.data[spr.indptr[i]:spr.indptr[i+1]] = 0
+        csr = csc.tocsr()
+        for i in xx: csr.data[csr.indptr[i]:csr.indptr[i + 1]] = 0
+        csc = csr.tocsc()
     return True
 
 
@@ -133,13 +149,49 @@ def test_decoder():
 
 def setup_parser():
     parser = argparse.ArgumentParser()
-    return parser
+    parser.add_argument('k', type=int)
+    parser.add_argument('n', type=int)
+    parser.add_argument('c', type=float)
+    parser.add_argument('delta', type=float)
+    parser.add_argument('count', type=int)
+    parser.add_argument('--pool', default=2, type=int)
+    return utils.bind_parser_common(parser)
+
+
+def exec_pool(args):
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    if args.console:
+        utils.setup_console_logger(log_level)
+    else:
+        utils.setup_file_logger(args.data_dir, 'luby', log_level)
+
+    id_keys = ['k', 'n', 'c', 'delta']
+    id_val = tuple(str(vars(args)[key]) for key in id_keys)
+    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
+    log = logging.getLogger('.'.join(id_val))
+
+    k, n, arr = args.k, args.n, []
+    omega = get_soliton(k, args.c, args.delta)
+
+    def callback(cb_args):
+        sim_id, num_sym = cb_args
+        log.info('sim_id=%d, num_sym=%d' % (sim_id, num_sym))
+        arr.append(num_sym)
+        saver.add_all({'arr': arr})
+
+    pool = Pool(processes=args.pool)
+    results = [pool.apply_async(simulate_cw, (x, omega, n,),
+                                callback=callback)
+               for x in range(args.count)]
+    for r in results: r.wait()
+    log.info('Finished all!')
 
 
 if __name__ == "__main__":
-    np.random.seed(5)
     # get_soliton(10000, 0.2, 0.05, True)
     # test_decoder()
-    main(setup_parser().parse_args())
+    test_sim()
+    # exec_pool(setup_parser().parse_args())
 
-    # Usage: python src/luby.py
+    # Usage: python src/luby.py 100 170 .1 .5 10
+    # Usage: python src/luby.py 10000 12000 .1 .5 250 --pool=40 --data-dir=$SCRATCH
