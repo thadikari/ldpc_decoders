@@ -76,6 +76,7 @@ def make_model(dim):
 
 
 def load_model(dim):
+    tf.reset_default_graph()
     model = make_model(dim)
     model.restore(tf.train.Saver())
     return model

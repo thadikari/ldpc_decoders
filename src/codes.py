@@ -30,12 +30,15 @@ codes = {'4_2_test': (np.array([[1, 1, 1, 0, 0],  # gen_mtx
                                 [0, 1, 1, 1, 0],
                                 [0, 0, 0, 1, 1]])
                       ),
-         '6_2_test': (None,
-                      np.array([[1, 1, 1, 0, 0, 0],  # parity_mtx
-                                [0, 0, 0, 1, 1, 1],
-                                [0, 0, 1, 1, 0, 1],
-                                [1, 1, 0, 0, 1, 0]])
-                      ),
+         # find gen_mtx using wolframalpha: nullspace of <H> in GF(2)
+         '6_2_3_ldpc': (np.array([[0, 0, 0, 1, 0, 1],  # gen_mtx
+                                  [1, 0, 1, 1, 1, 0],
+                                  [1, 1, 0, 0, 0, 0]]),
+                        np.array([[1, 1, 1, 0, 0, 0],  # parity_mtx
+                                  [0, 0, 0, 1, 1, 1],
+                                  [0, 0, 1, 1, 0, 1],
+                                  [1, 1, 0, 0, 1, 0]])
+                        ),
          '7_4_hamming': (np.array([[1, 1, 1, 0, 0, 0, 0],  # gen_mtx
                                    [1, 0, 0, 1, 1, 0, 0],
                                    [0, 1, 0, 1, 0, 1, 0],
@@ -44,7 +47,12 @@ codes = {'4_2_test': (np.array([[1, 1, 1, 0, 0],  # gen_mtx
                                    [0, 1, 1, 0, 0, 1, 1],
                                    [1, 0, 1, 0, 1, 0, 1]])
                          ),
-         '12_3_4_ldpc': (None,  # http://circuit.ucsd.edu/~yhk/ece154c-spr16/pdfs/ErrorCorrectionIII.pdf
+         # http://circuit.ucsd.edu/~yhk/ece154c-spr16/pdfs/ErrorCorrectionIII.pdf
+         '12_3_4_ldpc': (np.array([[0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1],
+                                   [0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0],
+                                   [0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1, 0],
+                                   [0, 1, 0, 0, 0, 1, 0, 1, 1, 0, 1, 1],
+                                   [1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1]]),
                          np.array([[0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],  # parity_mtx
                                    [1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
                                    [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0],
@@ -140,6 +148,17 @@ def verify_rand_reg_ldpc(code_name, l, r):
     print(parity_mtx.shape,
           (parity_mtx.sum(axis=0) == l).all(),
           (parity_mtx.sum(axis=1) == r).all())
+
+
+# find_gen_mtx given parity_mtx, not final version.
+def find_gen_mtx():
+    import itertools
+    H = 0  # copy the parity_mtx of 12_3_4_ldpc code
+    str_seq = [seq for seq in itertools.product("01", repeat=12)]
+    all_sets = np.array(str_seq).astype(np.int).T
+    G = all_sets[:, (H @ all_sets % 2).sum(0) == 0][:, [1, 2, 4, 8, 16]].T
+    print(G @ H.T % 2, G.shape)
+    print(G)
 
 
 def setup_parser():

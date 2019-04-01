@@ -19,6 +19,7 @@ def gen_data(count, dim):
 
 def test(dim):
     model = apprx.load_model(dim)
+    trainer = Trainer(model)
     if dim == 6:
         data = [.5, .5, .5, .5, .5, .5, 0, 0, 0, 0, 1, 1]
         arr = np.array(data).reshape(-1, 6)
@@ -27,7 +28,7 @@ def test(dim):
         print(model.eval_vec(np.array((1., .4))))
     else:
         test_data = gen_data(100, dim)
-        print(model.eval_loss(*test_data))
+        print(trainer.eval_loss(*test_data))
 
 
 class Trainer:
