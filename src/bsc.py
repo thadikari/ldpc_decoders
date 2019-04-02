@@ -77,7 +77,7 @@ class ML:
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, SPA, MSA, LP, ADMM]
-        kwargs = {'max_iter': 10, 'mu': 3., 'eps': 1e-5}
+        kwargs = {'max_iter': 100, 'mu': 3., 'eps': 1e-5, 'allow_pseudo': 1}
         self.sample('4_2_test', 1 / 3, decoders,
                     [1, 1, 0, 1, 1],
                     [1, 0, 0, 1, 1],

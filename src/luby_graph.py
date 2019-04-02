@@ -25,18 +25,25 @@ def plot_hist(arr, k, n, c):
     plt.show()
 
 
-def plot_soliton(rho, tau, mu, cut):
+def plot_avg_deg(ll_c, avg_deg):
+    plt.plot(ll_c, avg_deg)
+    plt.show()
+
+
+def plot_soliton(rho, tau, mu, c, cut):
     bar_width = 0.32
+    average = lambda dst: dst @ np.arange(1, len(dst) + 1)
     bar_plt = lambda ind, dst, name, clr: \
         plt.bar(np.arange(1, cut + 1) + bar_width * ind,
-                dst[:cut], bar_width, linewidth=0,
-                label=name, color=clr)
+                dst[:cut], bar_width, linewidth=0, color=clr,
+                label='%s, avg_deg=%g' % (name, average(dst)))
 
     bar_plt(0, rho, 'rho', 'r')
     bar_plt(1, tau, 'tau', 'b')
     bar_plt(2, mu, 'mu', 'y')
 
     plt.autoscale(enable=True, axis='x', tight=True)
+    plt.title('c=%g' % c)
     plt.legend()
     plt.show()
 

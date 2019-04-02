@@ -17,8 +17,8 @@ def gen_data(count, dim):
     return X, Y
 
 
-def test(dim):
-    model = apprx.load_model(dim)
+def test(dim, layers):
+    model = apprx.load_model(dim, layers)
     trainer = Trainer(model)
     if dim == 6:
         data = [.5, .5, .5, .5, .5, .5, 0, 0, 0, 0, 1, 1]
@@ -48,8 +48,8 @@ class Trainer:
         return self.sess.run(self.loss, feed_dict={self.model.X: X, self.model.Y: Y})
 
 
-def train(dim):
-    model = apprx.make_model(dim)
+def train(dim, layers):
+    model = apprx.make_model(dim, layers)
     trainer = Trainer(model)
     saver = tf.train.Saver()
     test_data = gen_data(100, dim)
@@ -63,5 +63,5 @@ def train(dim):
 
 if __name__ == '__main__':
     reset_all()
-    # train(6)
-    test(6)
+    train(6, [200, 200, 200])
+    # test(4, [100, 100])

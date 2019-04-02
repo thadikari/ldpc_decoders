@@ -7,9 +7,10 @@ from parity_polytope import apprx
 
 
 class ADMM_Base:
-    id_keys = ['mu', 'eps', 'max_iter']
+    id_keys = ['mu', 'eps', 'max_iter', 'allow_pseudo']
 
     def __init__(self, parity_mtx, **kwargs):
+        self.allow_pseudo = kwargs['allow_pseudo']
         self.mu, self.max_iter = kwargs['mu'], kwargs['max_iter']
         thresh = (kwargs['eps'] ** 2) * parity_mtx.sum()
         self.xx, self.yy = np.where(parity_mtx)
@@ -25,7 +26,7 @@ class ADMM_Base:
 
         def ret(val):
             # print(val, ':', iter_count)
-            return (x_hat > .5).astype(int)
+            return mu.pseudo_to_cw(x_hat, self.allow_pseudo)
 
         while 1:
             if 0 < self.max_iter <= iter_count: return ret('maximum')
@@ -57,12 +58,14 @@ class ADMM(ADMM_Base):
 
 
 class ADMMA(ADMM_Base):
+    id_keys = ADMM_Base.id_keys + ['layers']
+
     def __init__(self, parity_mtx, **kwargs):
         super().__init__(parity_mtx, **kwargs)
         dims = set(parity_mtx.sum(axis=1))
         if len(dims) != 1: raise Exception('Cannot use ADMMA decoder for codes with irregular check degree.')
         self.dim = dims.pop()
-        self.model = apprx.load_model(dim=self.dim)
+        self.model = apprx.load_model(dim=self.dim, layers=kwargs['layers'])
 
     def project(self, vec):
         ap = self.model.eval_rows(vec.reshape(-1, self.dim)).ravel()

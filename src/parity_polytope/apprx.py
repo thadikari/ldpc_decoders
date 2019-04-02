@@ -51,7 +51,7 @@ class Model:
         # TODO: replace tf.nn.sigmoid and loss func w/ ones that suit better
         self.Y_hat, Y_hat_logits, self.weights = create_fcnet(self.X, layers + [dim], tf.nn.relu, tf.nn.sigmoid)
         # Y_hat, Y_hat_logits, self.weights = create_fcnet(self.X, layers + [dim_vec], tf.identity, tf.identity)
-        self.dim = dim
+        self.name = '-'.join((str(i) for i in [dim] + layers + [dim]))
         self.sess = tf.Session()
 
     def eval_rows(self, X):
@@ -62,7 +62,7 @@ class Model:
 
     def path(self):
         dir_name = os.path.dirname(__file__)
-        return os.path.join(dir_name, '..', '..', 'cache', 'model_%d.ckpt' % self.dim)
+        return os.path.join(dir_name, '..', '..', 'cache', 'model_%s.ckpt' % self.name)
 
     def save(self, saver):
         saver.save(self.sess, self.path())
@@ -71,12 +71,12 @@ class Model:
         saver.restore(self.sess, self.path())
 
 
-def make_model(dim):
-    return Model(dim, [20, 20])
+def make_model(dim, layers):
+    return Model(dim, layers)
 
 
-def load_model(dim):
+def load_model(dim, layers):
     tf.reset_default_graph()
-    model = make_model(dim)
+    model = make_model(dim, layers)
     model.restore(tf.train.Saver())
     return model

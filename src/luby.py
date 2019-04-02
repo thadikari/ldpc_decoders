@@ -48,6 +48,7 @@ def simulate_cw(sim_id, omega, n):
     est = np.zeros(k, dtype=int)
     ret_val = n
     # send symbols till get decoded
+    # min_rank = -1
     for num_sym in range(k, n + 1):
         # print('sim_id', sim_id, 'num_sym', num_sym)
         rcv = snt[0:num_sym]
@@ -55,8 +56,9 @@ def simulate_cw(sim_id, omega, n):
         ret = decode(rcv, gen_col, est)
         # print('rcv:', rcv)
         # print('est:', hist.shape)
+        # if min_rank == -1 and k == np.linalg.matrix_rank(gen_col.toarray()): min_rank = num_sym
         if ret:
-            # print('success---------', num_sym)
+            # print('success---------', num_sym, 'min_rank', min_rank)
             # assert ((msg == est).all())
             # print(np.abs(msg - est).sum())
             ret_val = num_sym
@@ -104,6 +106,14 @@ def get_robust(k, c, delta):
     return tau
 
 
+def plot_avg_deg(k, delta):
+    average = lambda dst: dst @ np.arange(1, len(dst) + 1)
+    ll = np.linspace(.01, .1, 50)
+    avg_deg = [average(get_soliton(k, c, delta, plot=False)) for c in ll]
+    import luby_graph
+    luby_graph.plot_avg_deg(ll, avg_deg)
+
+
 def get_soliton(k, c, delta, plot=False):
     rho = get_ideal(k)
     tau = get_robust(k, c, delta)
@@ -111,7 +121,7 @@ def get_soliton(k, c, delta, plot=False):
 
     if plot:
         import luby_graph
-        luby_graph.plot_soliton(rho, tau, mu, 50)
+        luby_graph.plot_soliton(rho, tau, mu, c, 103)
 
     return mu
 
@@ -171,7 +181,8 @@ def exec_pool(args):
 
 
 if __name__ == "__main__":
-    # get_soliton(10000, 0.2, 0.05, True)
+    # get_soliton(10000, 0.1, 0.5, True)
+    # plot_avg_deg(10000, .5)
     # test_decoder()
     # test_sim()
     exec_pool(setup_parser().parse_args())

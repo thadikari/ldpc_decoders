@@ -5,9 +5,10 @@ import math_utils as mu
 
 
 class LP:
-    id_keys = ['max_iter']
+    id_keys = ['max_iter', 'allow_pseudo']
 
     def __init__(self, parity_mtx, **kwargs):
+        self.allow_pseudo = kwargs['allow_pseudo']
         self.max_iter = kwargs['max_iter']
         num_chk, num_var = parity_mtx.shape
         num_constraints = np.sum(2 ** (parity_mtx.sum(axis=1) - 1))
@@ -33,4 +34,4 @@ class LP:
                       b_ub=self.b_ub, bounds=(0, 1),
                       # options={"disp": True, "maxiter": self.max_iter}
                       )
-        return (res.x > .5).astype(int)
+        return mu.pseudo_to_cw(res.x, self.allow_pseudo)

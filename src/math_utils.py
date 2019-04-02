@@ -9,6 +9,15 @@ sum_axis = lambda coo, axis: mtx_to_vec(coo.sum(axis=axis))
 sign = lambda val: (val >= 0).astype(int) * 2 - 1
 
 
+def pseudo_to_cw(x_, allow_pseudo, eps=1e-8):
+    if allow_pseudo:
+        x_[x_ < eps] = 0
+        x_[1 - x_ < eps] = 1
+        return x_
+    else:
+        return (x_ > .5).astype(int)
+
+
 # input should be a coo_sparse mtx
 def prod_nonzero_sign(coo, axis):
     temp = coo.data

@@ -127,7 +127,7 @@ class MSA(SPA): pass
 class Test(utils.TestCase):
     def test_all(self):
         decoders = [ML, LP, SPA, ADMM]
-        kwargs = {'max_iter': 10, 'mu': 3., 'eps': 1e-5}
+        kwargs = {'max_iter': 100, 'mu': 3., 'eps': 1e-5, 'allow_pseudo': 1}
         self.sample('4_2_test', 1 / 3, decoders,
                     [1, 1, 0, 1, 1],
                     [1, 2, 0, 1, 2],
@@ -136,6 +136,15 @@ class Test(utils.TestCase):
                     [1, 0, 0, 1, 1, 0, 0],
                     [2, 0, 2, 1, 1, 0, 2],
                     **kwargs)
+
+    def test_hamming_lp(self):
+        decoders = [LP, ADMM]
+        kwargs = {'max_iter': 100, 'mu': 3., 'eps': 1e-15, 'allow_pseudo': 1}
+        for cw in codes.get_code('7_4_hamming').cb:
+            rv = cw.copy()
+            rv[-3:] = 2
+            self.sample('7_4_hamming', .1, decoders,
+                        cw, rv, **kwargs)
 
 
 if __name__ == "__main__":

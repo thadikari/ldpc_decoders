@@ -12,6 +12,8 @@ import time
 
 decoder_names = ['ML', 'SPA', 'MSA', 'LP', 'ADMM', 'ADMMA']
 
+strl = lambda ll: (str(it_) for it_ in ll)
+
 
 def setup_parser(code_names, channel_names, decoder_names):
     parser = argparse.ArgumentParser()
@@ -28,6 +30,8 @@ def setup_parser(code_names, channel_names, decoder_names):
     parser.add_argument('--max-iter', help='max iterations in iterative decoders', default=10, type=int)
     parser.add_argument('--mu', help='mu', default=3., type=float)
     parser.add_argument('--eps', help='epsilon', default=1e-5, type=float)
+    parser.add_argument('--allow-pseudo', help='pseudo cw allowed in LP, ADMM, ADMMA', action='store_true')
+    parser.add_argument('--layers', help='neural net layers', nargs='+', type=int)
 
     parser.add_argument('--log-freq', help='log frequency in seconds', default=5., type=float)
     return bind_parser_common(parser)
@@ -54,15 +58,25 @@ def setup_file_logger(path, name, level=logging.DEBUG):
     logging.info('Logger init to file. %s' % ('%' * 80))
 
 
+CGRN, CRED, CEND = '\033[32m', '\033[91m', '\033[0m'
+print_separator = lambda a_='': print(a_.center(20, '-'))
+
+
 class TestCase(unittest.TestCase):
     def sample(self, code, param, decoders, x, y, **kwargs):
         x_, y_ = np.array(x), np.array(y)
+        print_separator(code)
+        print('SNT: %s\nRCV: %s' % (str(x_), str(y_)))
+        print_separator()
         for decoder in decoders:
             dec = decoder(param, codes.get_code(code), **kwargs)
-            # print(dec, x_, dec.decode(y_))
-            self.assertTrue((dec.decode(y_) == x_).all())
-            # spa = SPA(param, codes.get_code(code))
+            passed = (dec.decode(y_) == x_).all()
+            res = (CGRN + 'PASS' if passed else CRED + 'FAIL!') + CEND
+            print('DEC: %s\t\t%s' % (decoder.__name__, res))
             # self.assertTrue((spa.decode(y_) == x_).all())
+            if not passed:
+                print('EST: %s' % dec.decode(y_))
+        print_separator(), print()
 
 
 def get_data_file_list(data_dir):
@@ -91,7 +105,7 @@ class Saver:
     def __init__(self, data_dir, run_ids):
         self.dict = OrderedDict(run_ids)
         make_dir_if_not_exists(data_dir)
-        dir_path, file_name = data_dir, '-'.join(self.dict.values())
+        dir_path, file_name = data_dir, '-'.join(strl(self.dict.values()))
         self.file_path = os.path.join(dir_path, '%s.json' % file_name)
 
     def add_meta(self, key, val):
