@@ -1,5 +1,6 @@
 import scipy.sparse as sp
 import numpy as np
+import itertools
 
 mtx_to_vec = lambda mtx: np.asarray(mtx).ravel()
 
@@ -7,6 +8,21 @@ sum_axis = lambda coo, axis: mtx_to_vec(coo.sum(axis=axis))
 
 # np.sign like func with no zeros returned
 sign = lambda val: (val >= 0).astype(int) * 2 - 1
+
+
+def assign_data(mat_, d_):
+    mat_.data = d_
+    return mat_
+
+
+# all binary_vectors of given length in a matrix
+def binary_vectors(length):
+    if 0:
+        d = np.arange(2 ** length)
+        return ((d[:, None] & (1 << np.arange(length))) > 0).astype(int)
+    else:
+        str_seq = [seq for seq in itertools.product("01", repeat=length)]
+        return np.array(str_seq).astype(np.int)
 
 
 def pseudo_to_cw(x_, allow_pseudo, eps=1e-8):

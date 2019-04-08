@@ -58,7 +58,6 @@ def main():
     else:
         utils.setup_file_logger(args.data_dir, 'test', log_level)
 
-    np.random.seed(0)
     test(args)
 
 

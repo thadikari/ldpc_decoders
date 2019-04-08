@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import logging
 import os
 
 
@@ -69,6 +70,37 @@ class Model:
 
     def restore(self, saver):
         saver.restore(self.sess, self.path())
+
+
+class Trainer:
+    def __init__(self, model, save_freq):
+        self.log = logging.getLogger('Trainer')
+        self.model = model
+        self.loss = tf.reduce_mean(tf.square(model.Y_hat - model.Y))
+        start_rate = .001
+        self.opt = tf.train.AdamOptimizer(start_rate).minimize(loss=self.loss)
+
+        init_op = tf.global_variables_initializer()
+        self.sess = model.sess
+        self.sess.run(init_op)
+        self.saver = tf.train.Saver()
+
+        self.save_freq = save_freq
+        self.step_count = 0
+
+    def save(self):
+        self.model.save(self.saver)
+
+    def step(self, X, Y):
+        self.sess.run(self.opt, feed_dict={self.model.X: X, self.model.Y: Y})
+        self.step_count += 1
+        if self.step_count % self.save_freq == 0:
+            loss = self.sess.run(self.loss, feed_dict={self.model.X: X, self.model.Y: Y})
+            self.log.info('Saving at step %d, loss=%g' % (self.step_count, loss))
+            self.save()
+
+    def eval_loss(self, X, Y):
+        return self.sess.run(self.loss, feed_dict={self.model.X: X, self.model.Y: Y})
 
 
 def make_model(dim, layers):

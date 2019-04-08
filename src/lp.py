@@ -1,6 +1,6 @@
 import numpy as np
-import itertools
 from scipy.optimize import linprog
+
 import math_utils as mu
 
 
@@ -18,9 +18,7 @@ class LP:
         cs = 0
         for chk_ind in range(num_chk):
             chk_yy = np.where(parity_mtx[chk_ind])[0]
-            chk_deg = chk_yy.shape[0]
-            str_seq = [seq for seq in itertools.product("01", repeat=chk_deg)]
-            all_sets = np.array(str_seq).astype(np.int)
+            all_sets = mu.binary_vectors(chk_yy.shape[0])
             sums = all_sets.sum(axis=1)
             idx = (sums % 2) == 1
             odd_sets = all_sets[idx, :]
@@ -31,7 +29,7 @@ class LP:
 
     def decode(self, y, gamma):
         res = linprog(gamma, A_ub=self.mat_ub,
-                      b_ub=self.b_ub, bounds=(0, 1),
+                      b_ub=self.b_ub, bounds=(0, 1), method='interior-point'
                       # options={"disp": True, "maxiter": self.max_iter}
                       )
-        return mu.pseudo_to_cw(res.x, self.allow_pseudo)
+        return mu.pseudo_to_cw(res.x, self.allow_pseudo, eps=1e-4)

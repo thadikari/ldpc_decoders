@@ -146,6 +146,18 @@ class Test(utils.TestCase):
             self.sample('7_4_hamming', .1, decoders,
                         cw, rv, **kwargs)
 
+    def test_hamming_all(self):
+        decoders = [LP]
+        # set linprog method='interior-point' to get similar results for SPA and LP
+        kwargs = {'max_iter': 100, 'allow_pseudo': 1}
+        for cw in codes.get_code('7_4_hamming').cb:
+            for err in mu.binary_vectors(7):
+                ret = self.sample('7_4_hamming', .1, decoders, cw,
+                                  np.clip(cw + err * 10, 0, 2),
+                                  prt=False, **kwargs)
+                print(str(ret[0] + 0) + ' ', end='')
+            print('')
+
 
 if __name__ == "__main__":
     import unittest

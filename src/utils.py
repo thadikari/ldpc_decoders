@@ -9,6 +9,7 @@ import numpy as np
 import codes
 from collections import OrderedDict
 import time
+import csv
 
 decoder_names = ['ML', 'SPA', 'MSA', 'LP', 'ADMM', 'ADMMA']
 
@@ -31,7 +32,8 @@ def setup_parser(code_names, channel_names, decoder_names):
     parser.add_argument('--mu', help='mu', default=3., type=float)
     parser.add_argument('--eps', help='epsilon', default=1e-5, type=float)
     parser.add_argument('--allow-pseudo', help='pseudo cw allowed in LP, ADMM, ADMMA', action='store_true')
-    parser.add_argument('--layers', help='neural net layers', nargs='+', type=int)
+    parser.add_argument('--layers', help='neural net layers', nargs='+', default=[100, 100], type=int)
+    parser.add_argument('--train', help='train ADMMA using ADMM', action='store_true')
 
     parser.add_argument('--log-freq', help='log frequency in seconds', default=5., type=float)
     return bind_parser_common(parser)
@@ -39,6 +41,7 @@ def setup_parser(code_names, channel_names, decoder_names):
 
 def bind_parser_common(parser):
     parser.add_argument('--data-dir', help='data directory', default=os.path.join('.', 'data'))
+    parser.add_argument('--cache-dir', help='cache directory', default=os.path.join('.', 'cache'))
     parser.add_argument('--plots-dir', help='save location', default=os.path.join('.', 'plots'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
     parser.add_argument('--console', help='prints log onto console', action='store_true')
@@ -59,24 +62,28 @@ def setup_file_logger(path, name, level=logging.DEBUG):
 
 
 CGRN, CRED, CEND = '\033[32m', '\033[91m', '\033[0m'
-print_separator = lambda a_='': print(a_.center(20, '-'))
 
 
 class TestCase(unittest.TestCase):
-    def sample(self, code, param, decoders, x, y, **kwargs):
+    def sample(self, code, param, decoders, x, y, prt=True, **kwargs):
+        print_ = lambda a_: print(a_) if prt else None
+        print_separator = lambda a_='': print_(a_.center(20, '-'))
         x_, y_ = np.array(x), np.array(y)
         print_separator(code)
-        print('SNT: %s\nRCV: %s' % (str(x_), str(y_)))
+        print_('SNT: %s\nRCV: %s' % (str(x_), str(y_)))
         print_separator()
+        ret = []
         for decoder in decoders:
             dec = decoder(param, codes.get_code(code), **kwargs)
             passed = (dec.decode(y_) == x_).all()
             res = (CGRN + 'PASS' if passed else CRED + 'FAIL!') + CEND
-            print('DEC: %s\t\t%s' % (decoder.__name__, res))
+            print_('DEC: %s\t\t%s' % (decoder.__name__, res))
             # self.assertTrue((spa.decode(y_) == x_).all())
+            ret.append(passed)
             if not passed:
-                print('EST: %s' % dec.decode(y_))
-        print_separator(), print()
+                print_('EST: %s' % dec.decode(y_))
+        print_separator(), print_('')
+        return ret
 
 
 def get_data_file_list(data_dir):

@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import logging
 
 import exact
 import apprx
@@ -19,7 +20,7 @@ def gen_data(count, dim):
 
 def test(dim, layers):
     model = apprx.load_model(dim, layers)
-    trainer = Trainer(model)
+    trainer = apprx.Trainer(model)
     if dim == 6:
         data = [.5, .5, .5, .5, .5, .5, 0, 0, 0, 0, 1, 1]
         arr = np.array(data).reshape(-1, 6)
@@ -31,37 +32,20 @@ def test(dim, layers):
         print(trainer.eval_loss(*test_data))
 
 
-class Trainer:
-    def __init__(self, model):
-        self.model = model
-        self.loss = tf.reduce_mean(tf.square(model.Y_hat - model.Y))
-        start_rate = .001
-        self.opt = tf.train.AdamOptimizer(start_rate).minimize(loss=self.loss)
-        init_op = tf.global_variables_initializer()
-        self.sess = model.sess
-        self.sess.run(init_op)
-
-    def step(self, X, Y):
-        self.sess.run(self.opt, feed_dict={self.model.X: X, self.model.Y: Y})
-
-    def eval_loss(self, X, Y):
-        return self.sess.run(self.loss, feed_dict={self.model.X: X, self.model.Y: Y})
-
-
 def train(dim, layers):
     model = apprx.make_model(dim, layers)
-    trainer = Trainer(model)
-    saver = tf.train.Saver()
+    trainer = apprx.Trainer(model, 500)
     test_data = gen_data(100, dim)
     for step in range(0, 10000):
         trainer.step(*gen_data(1000, dim))
         if step % 100 == 0:
             print(['step', step, 'loss', trainer.eval_loss(*test_data)])
 
-    model.save(saver)
+    trainer.save()
 
 
 if __name__ == '__main__':
     reset_all()
-    train(6, [200, 200, 200])
+    logging.basicConfig(format='%(name)s|%(message)s', level=logging.DEBUG)
+    train(3, [200, 200, 200])
     # test(4, [100, 100])

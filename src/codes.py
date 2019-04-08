@@ -2,6 +2,8 @@ import numpy as np
 import argparse
 import os
 
+import math_utils as mu
+
 
 class Code:
     def __init__(self, gen_mtx, parity_mtx):
@@ -9,15 +11,13 @@ class Code:
 
         if gen_mtx is not None:
             k, n = gen_mtx.shape
-            d = np.arange(2 ** k)
-            messages = ((d[:, None] & (1 << np.arange(k))) > 0).astype(int)
+            messages = mu.binary_vectors(k)
             self.cb = (messages @ gen_mtx) % 2
 
             # check if GH^T = 0
             assert (np.sum((self.cb @ parity_mtx.T) % 2) == 0)
             assert (self.cb[0].sum() == 0)  # all zeros cw
             # assert (self.cb[-1].sum() == n)  # all ones cw
-            # print(cb)
 
     def get_k(self): return self.get_n() - self.parity_mtx.shape[0]
 
@@ -152,10 +152,8 @@ def verify_rand_reg_ldpc(code_name, l, r):
 
 # find_gen_mtx given parity_mtx, not final version.
 def find_gen_mtx():
-    import itertools
     H = 0  # copy the parity_mtx of 12_3_4_ldpc code
-    str_seq = [seq for seq in itertools.product("01", repeat=12)]
-    all_sets = np.array(str_seq).astype(np.int).T
+    all_sets = mu.binary_vectors(12).T
     G = all_sets[:, (H @ all_sets % 2).sum(0) == 0][:, [1, 2, 4, 8, 16]].T
     print(G @ H.T % 2, G.shape)
     print(G)

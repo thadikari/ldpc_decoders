@@ -1,4 +1,5 @@
 from scipy.sparse import coo_matrix
+from scipy.sparse import csr_matrix
 import numpy as np
 
 import math_utils as mu
@@ -13,15 +14,21 @@ class ADMM_Base:
         self.allow_pseudo = kwargs['allow_pseudo']
         self.mu, self.max_iter = kwargs['mu'], kwargs['max_iter']
         thresh = (kwargs['eps'] ** 2) * parity_mtx.sum()
-        self.xx, self.yy = np.where(parity_mtx)
         self.var_deg = parity_mtx.sum(axis=0)
         self.is_close = lambda a_1, a_2: ((a_1 - a_2) ** 2).sum() < thresh
-        self.coo = lambda d_: coo_matrix((d_, (self.xx, self.yy)), shape=parity_mtx.shape)
+
+        self.xx, self.yy = np.where(parity_mtx)
+        dummy_data = self.yy * 0.
+        sparse_ = lambda mat_: mat_((dummy_data, (self.xx, self.yy)), shape=parity_mtx.shape)
+        self.coo_, self.csr_ = sparse_(coo_matrix), sparse_(csr_matrix)
+
+        self.coo = lambda d_: mu.assign_data(self.coo_, d_)
+        self.csr = lambda d_: mu.assign_data(self.csr_, d_)
         self.sum_cols = lambda d_: mu.sum_axis(self.coo(d_), 0)
 
     def decode(self, y, gamma):
         xx, yy = self.xx, self.yy
-        z_old, lambda_vec = yy * 0., yy * 0.
+        z_old, lambda_vec, v_vec = yy * 0., yy * 0., yy * 1.
         x_hat, iter_count = y * 1., 0
 
         def ret(val):
@@ -37,8 +44,8 @@ class ADMM_Base:
             x_hat_yy = x_hat[yy]
 
             # update z
-            v_vec = x_hat_yy + lambda_vec / self.mu
-            z_new = self.project(v_vec)
+            v_vec[:] = x_hat_yy + lambda_vec / self.mu
+            z_new = self.projection(iter_count, v_vec)
 
             # update lambda
             lambda_vec[:] = lambda_vec + self.mu * (x_hat_yy - z_new)
@@ -53,8 +60,8 @@ class ADMM(ADMM_Base):
     def __init__(self, parity_mtx, **kwargs):
         super().__init__(parity_mtx, **kwargs)
 
-    def project(self, vec):
-        return exact.proj_csr(self.coo(vec).tocsr())
+    def projection(self, _, vec):
+        return exact.proj_csr(self.csr(vec))
 
 
 class ADMMA(ADMM_Base):
@@ -65,10 +72,20 @@ class ADMMA(ADMM_Base):
         dims = set(parity_mtx.sum(axis=1))
         if len(dims) != 1: raise Exception('Cannot use ADMMA decoder for codes with irregular check degree.')
         self.dim = dims.pop()
-        self.model = apprx.load_model(dim=self.dim, layers=kwargs['layers'])
+        self.train = 'train' in kwargs and kwargs['train']
+        model_maker = apprx.make_model if self.train else apprx.load_model
+        self.model = model_maker(dim=self.dim, layers=kwargs['layers'])
+        if self.train: self.trainer = apprx.Trainer(self.model, save_freq=1000)
 
-    def project(self, vec):
-        ap = self.model.eval_rows(vec.reshape(-1, self.dim)).ravel()
-        # ex = exact.proj_csr(self.coo(vec).tocsr())
+    def projection(self, iter_count, vec):
+        if self.train:
+            apx = exact.proj_csr(self.csr(vec))
+            self.trainer.step(vec.reshape(-1, self.dim),
+                              apx.reshape(-1, self.dim))
+        else:
+            if iter_count > 500:
+                apx = exact.proj_csr(self.csr(vec))
+            else:
+                apx = self.model.eval_rows(vec.reshape(-1, self.dim)).ravel()
         # print(abs(ap-ex).sum()/len(ex))
-        return ap
+        return apx
