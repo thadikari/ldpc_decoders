@@ -40,6 +40,7 @@ class LLR:
     def __init__(self, dec):
         self.dec, safe_inf = dec, 1e8
         self.llr = np.array([safe_inf, -safe_inf, 0])  # 0 WP1, 1 WP1, 0 OR 1 WP0.5
+        self.stats = self.dec.stats if hasattr(self.dec, 'stats') else None
 
     def decode(self, y):
         return self.dec.decode(y, self.llr[y])

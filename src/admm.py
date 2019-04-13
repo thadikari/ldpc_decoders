@@ -26,6 +26,9 @@ class ADMM_Base:
         self.csr = lambda d_: mu.assign_data(self.csr_, d_)
         self.sum_cols = lambda d_: mu.sum_axis(self.coo(d_), 0)
 
+        self.iter = [0] * 2000
+        self.stats = {'iter': self.iter}
+
     def decode(self, y, gamma):
         xx, yy = self.xx, self.yy
         z_old, lambda_vec, v_vec = yy * 0., yy * 0., yy * 1.
@@ -33,6 +36,7 @@ class ADMM_Base:
 
         def ret(val):
             # print(val, ':', iter_count)
+            self.iter[iter_count if iter_count < len(self.iter) else -1] += 1
             return mu.pseudo_to_cw(x_hat, self.allow_pseudo)
 
         while 1:

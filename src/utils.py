@@ -125,7 +125,7 @@ class Saver:
             for key in self.dict: data[key] = self.dict[key]
             for key in val_dict: data[key] = {}
 
-        for key in val_dict: data[key][str(param)] = float(val_dict[key])
+        for key in val_dict: data[key][str(param)] = val_dict[key]
         self.write_(data)
 
     def write_(self, data):

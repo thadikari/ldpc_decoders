@@ -21,6 +21,7 @@ class Channel:
 class LLR:
     def __init__(self, snr_in_db, dec):
         self.noise_var, self.dec = noise_var(snr_in_db), dec
+        self.stats = self.dec.stats if hasattr(self.dec, 'stats') else None
 
     def decode(self, y):  # incoming cw \reals, outgoing cw {0,1}
         # http://dde.binghamton.edu/filler/mct/lectures/25/mct-lect25-bawgnc.pdf

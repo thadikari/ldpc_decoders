@@ -28,10 +28,12 @@ def test(args):
         start_time = time.time()
 
         def log_status():
-            val_dict = OrderedDict(zip(('tot', 'wec', 'wer', 'bec', 'ber'),
-                                       (tot, wec, wer, bec, ber)))
-            log.info(', '.join(('%s:%s' % (key.upper(), val_dict[key]) for key in val_dict)))
-            saver.add(param, val_dict)
+            keys = ['tot', 'wec', 'wer', 'bec', 'ber']
+            vals = [int(tot), int(wec), float(wer), int(bec), float(ber)]
+            log.info(', '.join(('%s:%s' % (key.upper(), val) for key, val in zip(keys, vals))))
+            if hasattr(decoder, 'stats') and decoder.stats is not None:
+                keys.append('dec'), vals.append(decoder.stats)
+            saver.add(param, OrderedDict(zip(keys, vals)))
 
         while wec < min_wec:
             if args.codeword == -1: x = code.cb[np.random.choice(code.cb.shape[0], 1)[0]]
