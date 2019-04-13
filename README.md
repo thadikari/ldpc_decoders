@@ -1,5 +1,9 @@
-Implementation of message passing based decoders for LDPC codes using Python/numpy. 
-Includes, min-sum (MSA) and sum-product (SPA) algorithms for binary erasure (BEC), binary symmetric (BSC) and binary-AWGN (biawgn) channels.
+Message passing based decoders for LDPC codes with Python/NumPy. Includes implementations of
+* **min-sum** (MSA) and **sum-product** (SPA) algorithms using **sparse matrices** (scipy.sparse)
+* **maximum-likedlood** (ML) and **linear-programming** (LP) decoders (only for short length codes like Hamming(7,4)) based on [Using Linear Programming to Decode Binary Linear Codes](https://people.eecs.berkeley.edu/~wainwrig/Papers/FelWaiKar05.pdf)
+* **ADMM** decoder based on [Decomposition Methods for Large Scale LP Decoding](https://arxiv.org/pdf/1204.0556.pdf)
+
+for binary erasure (**BEC**), binary symmetric (**BSC**) and binary-AWGN (**biawgn**) channels.
 
 ### Dependencies
 Following Python/package versions (or higher) are required.
