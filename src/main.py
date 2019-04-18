@@ -31,8 +31,7 @@ def test(args):
             keys = ['tot', 'wec', 'wer', 'bec', 'ber']
             vals = [int(tot), int(wec), float(wer), int(bec), float(ber)]
             log.info(', '.join(('%s:%s' % (key.upper(), val) for key, val in zip(keys, vals))))
-            if hasattr(decoder, 'stats') and decoder.stats is not None:
-                keys.append('dec'), vals.append(decoder.stats)
+            if hasattr(decoder, 'stats'): keys.append('dec'), vals.append(decoder.stats())
             saver.add(param, OrderedDict(zip(keys, vals)))
 
         while wec < min_wec:
@@ -64,4 +63,5 @@ def main():
 
 
 if __name__ == "__main__":
+    # np.random.seed(0)
     main()

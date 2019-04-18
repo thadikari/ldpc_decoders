@@ -25,7 +25,7 @@ class BPA:
 
         # np.seterr(all='raise')
         while 1:
-            if iter_count >= self.max_iter: return ret('maximum')
+            if 0 < self.max_iter <= iter_count: return ret('maximum')
             if ((self.parity_mtx @ x_hat) % 2 == 0).all(): return ret('decoded')
 
             # chk_to_var

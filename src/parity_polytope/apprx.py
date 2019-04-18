@@ -77,8 +77,8 @@ class Trainer:
         self.log = logging.getLogger('Trainer')
         self.model = model
         self.loss = tf.reduce_mean(tf.square(model.Y_hat - model.Y))
-        start_rate = .001
-        self.opt = tf.train.AdamOptimizer(start_rate).minimize(loss=self.loss)
+        self.learning_rate = tf.placeholder(tf.float32, name='learning_rate')
+        self.opt = tf.train.AdamOptimizer(self.learning_rate).minimize(loss=self.loss)
 
         init_op = tf.global_variables_initializer()
         self.sess = model.sess
@@ -92,9 +92,11 @@ class Trainer:
         self.model.save(self.saver)
 
     def step(self, X, Y):
-        self.sess.run(self.opt, feed_dict={self.model.X: X, self.model.Y: Y})
+        rate = 0.001  # / 2 ** (int(self.step_count / 20000))
+        self.sess.run(self.opt, feed_dict={self.model.X: X, self.model.Y: Y, self.learning_rate: rate})
         self.step_count += 1
         if self.step_count % self.save_freq == 0:
+            # print(rate)
             loss = self.sess.run(self.loss, feed_dict={self.model.X: X, self.model.Y: Y})
             self.log.info('Saving at step %d, loss=%g' % (self.step_count, loss))
             self.save()

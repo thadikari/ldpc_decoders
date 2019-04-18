@@ -40,7 +40,7 @@ class LLR:
     def __init__(self, dec):
         self.dec, safe_inf = dec, 1e8
         self.llr = np.array([safe_inf, -safe_inf, 0])  # 0 WP1, 1 WP1, 0 OR 1 WP0.5
-        self.stats = self.dec.stats if hasattr(self.dec, 'stats') else None
+        if hasattr(self.dec, 'stats'): self.stats = self.dec.stats
 
     def decode(self, y):
         return self.dec.decode(y, self.llr[y])
@@ -93,7 +93,7 @@ class SPA:
             return x_hat
 
         while 1:
-            if iter_count >= self.max_iter: return ret('maximum')
+            if 0 < self.max_iter <= iter_count: return ret('maximum')
             if np.sum(x_hat == 2) == 0: return ret('decoded')  # no erasures
 
             # chk_to_var
@@ -150,9 +150,12 @@ class Test(utils.TestCase):
     def test_hamming_all(self):
         decoders = [LP]
         # set linprog method='interior-point' to get similar results for SPA and LP
-        kwargs = {'max_iter': 100, 'allow_pseudo': 1}
+        kwargs = {'max_iter': 100, 'mu': 3., 'eps': 1e-15, 'allow_pseudo': 1}
+        errors = sorted(mu.binary_vectors(7), key=lambda k_: k_.sum())
+        # np.set_printoptions(linewidth=np.inf), print(np.array(errors).T)
         for cw in codes.get_code('7_4_hamming').cb:
-            for err in mu.binary_vectors(7):
+            print(str(cw) + '   ', end='')
+            for err in errors:
                 ret = self.sample('7_4_hamming', .1, decoders, cw,
                                   np.clip(cw + err * 10, 0, 2),
                                   prt=False, **kwargs)

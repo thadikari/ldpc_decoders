@@ -15,7 +15,15 @@ class ADMM_Base:
         self.mu, self.max_iter = kwargs['mu'], kwargs['max_iter']
         thresh = (kwargs['eps'] ** 2) * parity_mtx.sum()
         self.var_deg = parity_mtx.sum(axis=0)
-        self.is_close = lambda a_1, a_2: ((a_1 - a_2) ** 2).sum() < thresh
+        self.parity_mtx = parity_mtx
+
+        def lambda_(x_hat_yy, z_old, z_new):
+            aa1 = ((x_hat_yy - z_new) ** 2).sum()
+            aa2 = ((z_old - z_new) ** 2).sum()
+            # print('[', aa1, ',', aa2, '],')
+            return aa1 < thresh and aa2 < thresh
+
+        self.is_close = lambda_
 
         self.xx, self.yy = np.where(parity_mtx)
         dummy_data = self.yy * 0.
@@ -26,12 +34,15 @@ class ADMM_Base:
         self.csr = lambda d_: mu.assign_data(self.csr_, d_)
         self.sum_cols = lambda d_: mu.sum_axis(self.coo(d_), 0)
 
-        self.iter = [0] * 2000
-        self.stats = {'iter': self.iter}
+        self.iter = np.zeros(2000, dtype=int)
+
+    def stats(self):
+        avg = self.iter @ np.arange(len(self.iter)) / self.iter.sum()
+        return {'average': avg, 'iter': self.iter.tolist()}
 
     def decode(self, y, gamma):
         xx, yy = self.xx, self.yy
-        z_old, lambda_vec, v_vec = yy * 0., yy * 0., yy * 1.
+        z_old, lambda_vec, v_vec = yy * 0. + .5, yy * 0., yy * 1.
         x_hat, iter_count = y * 1., 0
 
         def ret(val):
@@ -54,8 +65,7 @@ class ADMM_Base:
             # update lambda
             lambda_vec[:] = lambda_vec + self.mu * (x_hat_yy - z_new)
 
-            if self.is_close(x_hat_yy, z_new) and \
-                    self.is_close(z_old, z_new): return ret('converged')
+            if self.is_close(x_hat_yy, z_old, z_new): return ret('converged')
             z_old = z_new
             iter_count += 1
 
@@ -69,7 +79,7 @@ class ADMM(ADMM_Base):
 
 
 class ADMMA(ADMM_Base):
-    id_keys = ADMM_Base.id_keys + ['layers']
+    id_keys = ADMM_Base.id_keys + ['layers']  # , 'apprx']
 
     def __init__(self, parity_mtx, **kwargs):
         super().__init__(parity_mtx, **kwargs)
@@ -80,6 +90,7 @@ class ADMMA(ADMM_Base):
         model_maker = apprx.make_model if self.train else apprx.load_model
         self.model = model_maker(dim=self.dim, layers=kwargs['layers'])
         if self.train: self.trainer = apprx.Trainer(self.model, save_freq=1000)
+        self.switch = kwargs['apprx']
 
     def projection(self, iter_count, vec):
         if self.train:
@@ -87,7 +98,7 @@ class ADMMA(ADMM_Base):
             self.trainer.step(vec.reshape(-1, self.dim),
                               apx.reshape(-1, self.dim))
         else:
-            if iter_count > 500:
+            if 0 < self.switch < iter_count:
                 apx = exact.proj_csr(self.csr(vec))
             else:
                 apx = self.model.eval_rows(vec.reshape(-1, self.dim)).ravel()

@@ -19,7 +19,7 @@ class Channel:
 class LLR:
     def __init__(self, p, dec):
         self.llr, self.dec = np.log(1 - p) - np.log(p), dec
-        self.stats = self.dec.stats if hasattr(self.dec, 'stats') else None
+        if hasattr(self.dec, 'stats'): self.stats = self.dec.stats
 
     def decode(self, y):
         return self.dec.decode(y, self.llr * (1 - 2 * y))

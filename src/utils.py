@@ -34,6 +34,7 @@ def setup_parser(code_names, channel_names, decoder_names):
     parser.add_argument('--allow-pseudo', help='pseudo cw allowed in LP, ADMM, ADMMA', action='store_true')
     parser.add_argument('--layers', help='neural net layers', nargs='+', default=[100, 100], type=int)
     parser.add_argument('--train', help='train ADMMA using ADMM', action='store_true')
+    parser.add_argument('--apprx', help='max iterations using apprx method in ADMMA', default=-1, type=int)
 
     parser.add_argument('--log-freq', help='log frequency in seconds', default=5., type=float)
     return bind_parser_common(parser)
@@ -74,14 +75,13 @@ class TestCase(unittest.TestCase):
         print_separator()
         ret = []
         for decoder in decoders:
-            dec = decoder(param, codes.get_code(code), **kwargs)
-            passed = (dec.decode(y_) == x_).all()
+            est = decoder(param, codes.get_code(code), **kwargs).decode(y_)
+            passed = (est == x_).all()
             res = (CGRN + 'PASS' if passed else CRED + 'FAIL!') + CEND
             print_('DEC: %s\t\t%s' % (decoder.__name__, res))
             # self.assertTrue((spa.decode(y_) == x_).all())
             ret.append(passed)
-            if not passed:
-                print_('EST: %s' % dec.decode(y_))
+            if not passed: print_('EST: %s' % est)
         print_separator(), print_('')
         return ret
 
