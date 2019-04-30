@@ -90,10 +90,48 @@ class Test(utils.TestCase):
         # .2 will fail as it doesn't have enough
         # strength to change the belief of wrong bit
 
+    def test_LP_vs_ADMM(self):
+        decoders = [LP, ADMM]
+        kwargs = {'max_iter': -1, 'mu': 3., 'eps': 1e-15, 'allow_pseudo': 1}
+        self.sample('7_4_hamming', .1, decoders,
+                    [0, 1, 0, 0, 1, 0, 1],
+                    [0, 1, 0, 1, 1, 0, 1],
+                    **kwargs)
+
+    def test_find_pcws(self):
+        md = admm.ADMM
+        md = lp.LP
+        np.set_printoptions(linewidth=np.inf)
+        x = np.array([0, 1, 0, 0, 1, 0, 1])
+        y = np.array([0, 1, 0, 1, 1, 0, 1])
+        kwargs = {'max_iter': -1, 'mu': 3., 'eps': 1e-5, 'allow_pseudo': 1}
+        dec = md(codes.get_code('7_4_hamming').parity_mtx, **kwargs)
+        ll = np.copy(x)[np.newaxis, :]
+        for i in range(1000):
+            z = dec.decode(y, 1 - 2 * y + np.random.rand(7) * 0.001)
+            if (np.max(np.abs(ll - z), axis=1) > 1e-3).all():
+                ll = np.append(ll, z[np.newaxis, :], axis=0)
+                print(z)
+
+    def test_hamming_all(self):
+        decoders = [LP]
+        # set linprog method='interior-point' to get similar results for SPA and LP
+        kwargs = {'max_iter': -1, 'mu': 3., 'eps': 1e-15, 'allow_pseudo': 1}
+        errors = sorted(mu.binary_vectors(7), key=lambda k_: k_.sum())
+        # np.set_printoptions(linewidth=np.inf), print(np.array(errors).T)
+        for cw in codes.get_code('7_4_hamming').cb:
+            print(str(cw) + '   ', end='')
+            for err in errors:
+                ret = self.sample('7_4_hamming', .1, decoders, cw,
+                                  (cw + err) % 2,
+                                  prt=False, **kwargs)
+                print(str(ret[0] + 0) + ' ', end='')
+            print('')
+
 
 if __name__ == "__main__":
     import unittest
     import codes
 
     np.random.seed(0)
-    Test().test_all()  # unittest.main()
+    Test().test_hamming_all()  # unittest.main()
