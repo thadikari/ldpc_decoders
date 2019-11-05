@@ -1,0 +1,38 @@
+* ADDMM/ADDMMA DECODER README: UNFINISHED WORK
+
+
+
+** Commands
+
+python -u src/main.py bec margulis ADMM --max-iter=-1 --codeword=0 --console --params .5 .45 .4 .35 .3 .25 .2 --min-wec=100 --allow-pseudo --apprx=50
+python -u src/main.py bec 6_2_3_ldpc ADMMA --codeword=1 --console --params .8 --train
+python -u src/main.py bec 6_2_3_ldpc ML --codeword=0 --console --params .8 .6 .4 .3 .2 .1
+python -u src/main.py bec margulis ADMMA --max-iter=-1 --codeword=1 --console --params .3
+python -u src/main.py biawgn margulis ADMMA --max-iter=-1 --codeword=1 --console --params 1 2
+python -u src/main.py bec margulis ADMM --max-iter=-1 --codeword=1 --console --params .8 .7 .6 .5 .45 .4 .3 .2 .1
+python -u src/main.py bec 6_2_3_ldpc ADMMA --codeword=1 --max-iter=-1 --console --params .1 --min-wec=1000 --train
+python -u src/main.py bec margulis ADMMA --max-iter=-1 --codeword=1 --console --params .1 --min-wec=1000 --train
+python -u src/main.py bec margulis LP --max-iter=-1 --codeword=0 --console --params .4 --min-wec=100 --allow-pseudo --eps=1e-10 --data-dir=$SCRATCH
+
+python -u src/graph.py bec 6_2_3_ldpc ML SPA ADMM LP comp_dec --error=ber
+
+
+** Notes on ADMM decoder based simulations:
+
+First need to compile projection.cpp written in C.
+
+On Windows:
+1. Install GnuWin32 to get the `make' command working.
+
+If g++ compiler is MinGW, make sure MinGW64 is used for Python 64-bit version.
+And 32 for Python 32. Otherwise python will raise "OSError: [WinError 193] %1 is not a valid Win32 application" when doing dlopen through ctypes.cdll.LoadLibrary.
+A MinGW64 version is available:
+https://stackoverflow.com/questions/16955909/building-64-bit-dll-with-mingw-32-bit-in-eclipse
+http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win64/Personal%20Builds/rubenvb/gcc-4.8-release/x86_64-w64-mingw32-gcc-4.8.0-win64_rubenvb.7z/downloads
+
+64-bit version Also, if using TensorFlow on windows, only TF-32 works, is not available.
+==> make sure python 64, mingw64 are installed.
+C:\MinGW64\bin
+
+
+On Linux:

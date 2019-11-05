@@ -73,6 +73,7 @@ def graph_(args):
         data = get_first(filter_data(chk), 'single')
         plot_(data[args.error], 'k-', data['decoder'])
         title = def_title(args)
+        err_plt(args)
 
     elif args.type == 'compare':
         chk = lambda it: prefix_or_code(it, args) and \
@@ -81,6 +82,7 @@ def graph_(args):
         for data, style in zip(filter_data(chk), line_styles4):
             plot_(data[args.error], style, prefix_code(data))
         title = args.channel.upper() + ', %s decoder' % args.decoder[0]
+        err_plt(args)
 
     elif args.type == 'comp_dec':
         chk = lambda it: prefix_or_code(it, args) and \
@@ -90,9 +92,11 @@ def graph_(args):
         same_code = len(set([prefix_code(data) for data in filtered])) <= 1  # check if all are for same code
         for data, style in zip(filtered, line_styles4):
             decoder = data['decoder']
+            # leg = '%s-%s%s' % (decoder, prefix_code(data), '-' + str(data.get('layers')))
             leg = decoder if same_code else '%s-%s' % (decoder, prefix_code(data))
             plot_(data[args.error], style, leg)
         title = def_title(args) if same_code else 'Comparison of decoders'
+        err_plt(args)
 
     elif args.type == 'ensemble':
         chk = lambda it: it.get('decoder', '') == args.decoder[0] and \
@@ -107,6 +111,7 @@ def graph_(args):
         log.info('Searching for average')
         plot_(get_first(filter_data(chk_avg), 'average')[args.error], 'b-', 'Average')
         title = def_title(args) + ' code ensemble' + ', %s decoder' % args.decoder[0]
+        err_plt(args)
 
     elif args.type == 'max_iter':
         chk = lambda it: it.get('code', '') == args.code and \
@@ -116,15 +121,38 @@ def graph_(args):
             decoder = data['decoder']
             plot_(data[args.error], style, data['max_iter'])
         title = def_title(args) + ', %s decoder' % args.decoder[0] + ', Effect of iterations cap'
+        err_plt(args)
+
+    elif args.type == 'hist_iter':
+        chk = lambda it: it.get('code', '') == args.code and \
+                         it.get('decoder', '') == args.decoder[0]
+        data = get_first(filter_data(chk), 'single')
+        # plot_(data[args.error], 'k-', data['decoder'])
+        series = data['dec'][str(args.param)]['iter']
+        xvals = range(len(series))
+        avg = sum([a1_ * a2_ for a1_, a2_ in zip(xvals, series)]) / sum(series)
+        plt.bar(xvals, series, label='Average=%g' % avg)
+        plt.xlabel('Number of iterations')
+        plt.gca().set_yticks([])
+        title = ''
+
+    elif args.type == 'avg_iter':
+        chk = lambda it: it.get('code', '') == args.code and \
+                         it.get('decoder', '') in args.decoder
+        for data in filter_data(chk):
+            # plot_(data[args.error], 'k-', data['decoder'])
+            params = sorted([param for param in data['dec'].keys()])
+            avgs = [data['dec'][param]['average'] for param in params]
+            plt.plot(params, avgs, label=data['decoder'])
+            plt.xlabel(x_labels[args.channel])
+            plt.ylabel('Average number of iterations')
+            plt.grid(True, which='both')
+            title = ''
 
     else:
         return
 
-    plt.xlabel(x_labels[args.channel])
-    plt.yscale('log')
-    plt.ylabel(args.error.upper())
     plt.legend(loc='best')
-    plt.grid(True, which='both')
     if args.xlim is not None: plt.xlim(args.xlim)
     if args.ylim is not None: plt.ylim(args.ylim)
     plt.title(title)
@@ -134,6 +162,13 @@ def graph_(args):
         img_path = os.path.join(args.plots_dir, args.save)
         plt.savefig(img_path, bbox_inches='tight')
     if not args.silent: plt.show()
+
+
+def err_plt(args):
+    plt.xlabel(x_labels[args.channel])
+    plt.ylabel(args.error.upper())
+    plt.yscale('log')
+    plt.grid(True, which='both')
 
 
 def setup_parser():
@@ -147,10 +182,14 @@ def setup_parser():
                                  'comp_dec',  # compare multiple decoders
                                  'ensemble',  # average and ensemble
                                  'max_iter',  # compare iterations cap
-                                 'compare'  # compare with another
+                                 'compare',  # compare with another
+                                 'hist_iter',  # histogram and stats of iteration count
+                                 'avg_iter',  # plot on average number of iterations
                                  ])
 
     parser.add_argument('--max-iter', help='filter out multiple matches', type=int)
+    parser.add_argument('--apprx', help='filter out multiple matches', type=int)
+    parser.add_argument('--param', help='param', type=float)
     parser.add_argument('--mu', help='mu', type=float)
     parser.add_argument('--eps', help='epsilon', type=float)
     parser.add_argument('--extra', help='code names to compare with in [type=compare] plots')

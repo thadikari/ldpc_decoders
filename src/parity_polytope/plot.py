@@ -38,7 +38,7 @@ def main(args):
     ax_ = lambda d_, m_, l_: ax.plot(*d_, m_, label=l_, **config)[0]
     lines_ = lambda d_, e_, a_: (ax_(d_, 'g^', 'Data'), ax_(e_, 'bs', 'Exact'), ax_(a_, 'ro', 'Apprx'))
 
-    model = apprx.load_model(dim)
+    model = apprx.load_model(dim, [20, 20])
 
     if demo == 'static':
         config['markersize'] = 10

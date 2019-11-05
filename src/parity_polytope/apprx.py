@@ -92,13 +92,13 @@ class Trainer:
         self.model.save(self.saver)
 
     def step(self, X, Y):
-        rate = 0.001  # / 2 ** (int(self.step_count / 20000))
+        rate = 0.001  # / 10 ** (int(self.step_count / 10000))
         self.sess.run(self.opt, feed_dict={self.model.X: X, self.model.Y: Y, self.learning_rate: rate})
         self.step_count += 1
         if self.step_count % self.save_freq == 0:
             # print(rate)
             loss = self.sess.run(self.loss, feed_dict={self.model.X: X, self.model.Y: Y})
-            self.log.info('Saving at step %d, loss=%g' % (self.step_count, loss))
+            self.log.info('Saving at step=%d, rate=%g, loss=%g' % (self.step_count, rate, loss))
             self.save()
 
     def eval_loss(self, X, Y):
