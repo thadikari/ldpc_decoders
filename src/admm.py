@@ -4,7 +4,6 @@ import numpy as np
 
 import math_utils as mu
 from parity_polytope import exact
-from parity_polytope import apprx
 
 
 class ADMM_Base:
@@ -82,6 +81,7 @@ class ADMMA(ADMM_Base):
     id_keys = ADMM_Base.id_keys + ['layers']  # , 'apprx']
 
     def __init__(self, parity_mtx, **kwargs):
+        from parity_polytope import apprx
         super().__init__(parity_mtx, **kwargs)
         dims = set(parity_mtx.sum(axis=1))
         if len(dims) != 1: raise Exception('Cannot use ADMMA decoder for codes with irregular check degree.')

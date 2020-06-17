@@ -1,9 +1,10 @@
+from collections import OrderedDict
 import numpy as np
 import logging
+import time
+
 import utils, codes
 from models import models
-import time
-from collections import OrderedDict
 
 
 def test(args):
@@ -59,6 +60,7 @@ def main():
     else:
         utils.setup_file_logger(args.data_dir, 'test', log_level)
 
+    print(vars(args))
     test(args)
 
 

@@ -1,15 +1,17 @@
-import argparse
-import json
-import logging
-import os
-import unittest
-
 import numpy as np
-
-import codes
-from collections import OrderedDict
+import argparse
+import unittest
+import logging
+import json
 import time
 import csv
+import os
+
+from collections import OrderedDict
+import utilities as ut
+import utilities.file
+import codes
+
 
 decoder_names = ['ML', 'SPA', 'MSA', 'LP', 'ADMM', 'ADMMA']
 
@@ -41,9 +43,10 @@ def setup_parser(code_names, channel_names, decoder_names):
 
 
 def bind_parser_common(parser):
-    parser.add_argument('--data-dir', help='data directory', default=os.path.join('.', 'data'))
-    parser.add_argument('--cache-dir', help='cache directory', default=os.path.join('.', 'cache'))
-    parser.add_argument('--plots-dir', help='save location', default=os.path.join('.', 'plots'))
+    _dir = ut.file.resolve_data_dir_os('decoders')
+    parser.add_argument('--data-dir', help='data directory', default=os.path.join(_dir, 'data'))
+    parser.add_argument('--cache-dir', help='cache directory', default=os.path.join(_dir, 'cache'))
+    parser.add_argument('--plots-dir', help='save location', default=os.path.join(_dir, 'plots'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
     parser.add_argument('--console', help='prints log onto console', action='store_true')
     return parser

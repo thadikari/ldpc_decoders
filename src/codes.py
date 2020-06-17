@@ -65,7 +65,7 @@ codes = {'4_2_test': (np.array([[1, 1, 1, 0, 0],  # gen_mtx
                          )
          }
 
-file_codes_dir = os.path.join('.', 'codes')
+file_codes_dir = os.path.join('.', 'data', 'codes')
 
 
 def get_file_code_map():
