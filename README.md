@@ -13,19 +13,19 @@ Following Python/package versions (or higher) are required.
 
 
 ## Exploring pre-computed results
-Checkout `assests` branch to see all pre-compupted results. These include different codes, simulation results and plots.
-<img src="../assets/plots/BIAWGN_MSA_ensemble.png?raw=true" width="280" />
-<img src="../assets/plots/BSC_SPA_compare.png?raw=true" width="280" />
-<img src="../assets/plots/MSA_SPA_BIAWGN.png?raw=true" width="280" />
-<img src="../assets/plots/BEC_compare.png?raw=true" width="280" />
-<img src="../assets/plots/BEC_max_iter.png?raw=true" width="280" />
-<img src="../assets/plots/HMG_BIAWGN.png?raw=true" width="280" />
+See all pre-compupted results in [`codes`](data/codes), [`output`](data/output) and [`plots`](data/plots). These include different codes, simulation results and plots.
+<img src="data/plots/BIAWGN_MSA_ensemble.png?raw=true" width="280" />
+<img src="data/plots/BSC_SPA_compare.png?raw=true" width="280" />
+<img src="data/plots/MSA_SPA_BIAWGN.png?raw=true" width="280" />
+<img src="data/plots/BEC_compare.png?raw=true" width="280" />
+<img src="data/plots/BEC_max_iter.png?raw=true" width="280" />
+<img src="data/plots/HMG_BIAWGN.png?raw=true" width="280" />
 
 
 ## Starting from scratch
 
 ### Running simulations
-* Make directories `codes` and `data` in the root directory.
+* Simulation output written to `~/scratch/decoders` by default.
 * Execute `python src/codes.py 10 1200 3 6` to generate 10 random samples from `LDPC(1200,3,6)` ensemble.
 * Run simulations using `run_sims.sh {PARA} {CASE} {ARGS}` command. For example,
   * `./run_sims.sh SEQL HMG` executes all Hamming code related simulations **sequentially**.
