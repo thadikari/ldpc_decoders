@@ -5,21 +5,15 @@ import argparse
 
 global args_
 
-run = lambda ll: [print('>>', ll, flush=True), subprocess.run(ll)]
+run = lambda ll: [print('>>', ll, flush=True), subprocess.run(ll, shell=True)]
 exc = lambda e_, case: run(' '.join([e_] + case))
 grph = lambda case: exc('python -u src/graph.py', case + args_.arg)
-stat = lambda case: exc('python -u src/stats.py', case)
 grph_ = lambda cases: [grph(case) for case in cases]
 stat_ = lambda cases: [stat(case) for case in cases]
 
 x_ = lambda a__: '--xlim ' + a__
 y_ = lambda a__: '--ylim ' + a__
 mi_ = lambda a__: '--max-iter=' + str(a__)
-
-
-def plot_ens(chl, name, dec, args):
-    stat([chl, name, dec])  # , '--data-dir=$DATA_DIR'])
-    grph([chl, name, dec, 'ensemble'] + args)
 
 
 def main(args):
@@ -29,26 +23,35 @@ def main(args):
 
 
 def switch(case):
-    sv_ = lambda a__: '--save %s__%s.%s' % (case, a__, args_.ext)
+    sv_ = lambda a__: '--file_name %s__%s' % (case, a__)
+    fmt_str = '%s --and %s --error ber --legend decoder --title "%s, %s"'
+    conf = lambda chl,cde: fmt_str%(chl,cde,chl.upper(),cde)
 
     if case == 'HMG':  # all hamming code sims
-        code, config = '7_4_hamming', ['--error ber']
-        grph(['bec', code, 'ML SPA LP ADMM', 'comp_dec', sv_('BEC')] + config)
-        grph(['bsc', code, 'ML SPA MSA LP ADMM', 'comp_dec', sv_('BSC')] + config)
-        grph(['biawgn', code, 'ML SPA MSA LP ADMM', 'comp_dec', sv_('BIAWGN')] + config)
+        co_ = lambda chl: conf(chl, '7_4_hamming')
+        grph([co_('bec'), '--or_ ML SPA LP ADMM', sv_('BEC')])
+        grph([co_('bsc'), '--or_ ML SPA MSA LP ADMM', sv_('BSC')])
+        grph([co_('biawgn'), '--or_ ML SPA MSA LP ADMM', sv_('BIAWGN')])
 
     elif case == 'MAR':
-        config = 'margulis ADMM single'
-        grph(['bec', config, sv_('BEC')])
-        grph(['bsc', config, sv_('BSC')])
-        grph(['biawgn', config, sv_('BIAWGN')])
+        co_ = lambda chl: conf(chl, 'margulis')
+        config = '--or_ ADMM'
+        grph([co_('bec'), config, sv_('BEC')])
+        grph([co_('bsc'), config, sv_('BSC')])
+        grph([co_('biawgn'), config, sv_('BIAWGN')])
+
+
+        '''
+        Following three cases may not work with newest version of src/graph.py
+        checkout commit e9f545908d27fee157f8896fcdf40939022708d5 for last working version
+        '''
 
     elif case == 'REG_ENS':
         ens, code = '1200_3_6_rand_ldpc', '1200_3_6_ldpc'
 
         def plt_(chl, dec, args_en, args_cm, args_mi):
             prefix = chl + '_' + dec
-            plot_ens(chl, ens, dec, args_en + [sv_(prefix + '_ensemble')])
+            grph([chl, ens, dec, 'ensemble'] + args_en + [sv_(prefix + '_ensemble')])
             grph([chl, ens, dec, 'compare', sv_(prefix + '_compare'), '--extra ' + code] + args_cm)
             grph([chl, code, dec, 'max_iter', sv_(prefix + '_max_iter')] + args_mi)
 
@@ -70,7 +73,7 @@ def switch(case):
 
         def plt_(chl, dec, args_en):
             prefix = chl + '_' + dec
-            plot_ens(chl, ens, dec, args_en + [sv_(prefix + '_ensemble')])
+            grph([chl, ens, dec, 'ensemble'] + args_en + [sv_(prefix + '_ensemble')])
 
         plt_('bec', 'SPA', ['--xlim .3 .5 --ylim 2e-7 .5 --max-iter=10'])
         plt_('bsc', 'MSA', ['--xlim 0.02 0.08 --ylim 6e-6 .2 --max-iter=10'])
@@ -100,9 +103,7 @@ def switch(case):
 def setup_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('case', nargs='+', help='specify case(s)')
-    parser.add_argument('--ext', help='extension of saved plot', default='png', choices=['png', 'pdf'])
     parser.add_argument('arg', help='arguments passed to graph.py', default=[], nargs=argparse.REMAINDER)
-    # parser.add_argument('--arg-stats', help='arguments passed to stats.py', nargs=argparse.REMAINDER)
     return parser
 
 

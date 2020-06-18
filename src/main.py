@@ -17,8 +17,7 @@ def test(args):
     code_n = code.get_n()
     x = code.parity_mtx[0] * 0 + args.codeword  # add 1 or 0
     min_wec = args.min_wec
-    saver = utils.Saver(args.data_dir, list(
-        zip(['type'] + id_keys, ['simulation'] + id_val)))
+    saver = utils.Saver(args.data_dir, list(zip(id_keys, id_val)))
 
     for param in args.params:
         log.info('Starting parameter: %f' % param)

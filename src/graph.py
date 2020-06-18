@@ -1,218 +1,157 @@
+import matplotlib
 import argparse
-import logging
 import os
 import re
-import matplotlib
-from models import models
+
+import utilities as ut
+import utilities.mpl
 import utils
+
+
+ut.mpl.init(font_size=12, legend_font_size=12, tick_size=12)
+
+legend_reg = ut.Registry()
+r_ = legend_reg.put
+r_('decoder', lambda d_: d_['decoder'])
+r_('chl_dec', lambda d_: d_['channel'].upper() + ', %s decoder' % d_['decoder'])
+r_('chl_code', lambda d_: d_['channel'].upper() + ', %s code' % d_['code'])
 
 x_labels = {'bsc': 'Crossover probability',
             'bec': 'Erasure probability',
             'biawgn': 'E_b/N in dB for E_b=1'}
-lines = {'ML': 'b:', 'SPA': 'g--', 'MSA': 'r-.', 'LP': 'm-+', 'ADMM': 'k--'}
-line_styles4 = ['b--', 'r-', 'g-.', 'm:']
-line_styles = list(it1 + it2
-                   for it1 in ['-', '--', '-.', ':']
-                   for it2 in ['b', 'g', 'r'])
 
 
-def plot_(pairs, style, label):
+class DataRoot:
+    def __init__(self, file_name, label):
+        self.label = label
+        self.data = utils.load_json(os.path.join(args.data_dir, file_name))
+    def get_label(self):
+        if args.legend_format is None:
+            return self.label
+        else:
+            return legend_reg.get(args.legend_format)(self.data)
+
+
+def plot_(pairs, label, style=None):
     pairs_ = list(zip(map(float, pairs.keys()), pairs.values()))
     pairs_.sort(key=lambda x: x[0])
-    plt.plot(*list(zip(*pairs_)), style, linewidth=3, label=label)
+    argsl = list(zip(*pairs_))
+    kwargs = {'linewidth':args.linewidth, 'label':label}
+    if style is None: plt.plot(*argsl, **kwargs)
+    else: plt.plot(*argsl, style, **kwargs)
 
 
-def_title = lambda args: ', '.join((args.channel.upper(), args.code))
+plot_reg = ut.Registry()
+reg_plot = plot_reg.reg
+
+@reg_plot
+def plot_all(dl): # plot all files
+    for r in dl: plot_(r.data[args.error], r.get_label())
+    fmt_err()
+    plot_common(args.title)
+
+@reg_plot
+def ensemble(dl): # average and ensemble
+    pot = {}
+    for r in dl:
+        for point,val in r.data[args.error].items():
+            if point not in pot.keys(): pot[point] = []
+            pot[point].append(val)
+    for point in pot:
+        vals = pot[point]
+        pot[point] = sum(vals) / float(len(vals))
+
+    for r in dl: plot_(r.data[args.error], None, 'r--')
+    plot_(pot, 'Average', 'b-')
+    fmt_err()
+    title = 'Code ensemble' # + ', %s decoder' % args.decoder[0]
+    plot_common(title)
 
 
-def graph_(args):
-    log = logging.getLogger()
-    data_list = []
-    for file_name in utils.get_data_file_list(args.data_dir):
-        data = utils.load_json(os.path.join(args.data_dir, file_name))
-        if data['type'] != 'simulation': continue
-        if data['channel'] == args.channel: data_list.append((file_name, data))
+@reg_plot # depricated, discontinued after commit e9f545908d27fee157f8896fcdf40939022708d5
+def hist_iter(dl): # histogram and stats of iteration count
+    chk = lambda it: it.get('code', '') == args.code and \
+                     it.get('decoder', '') == args.decoder[0]
+    data = get_first(filter_data(dl, chk), 'single')
+    # plot_(data[args.error], 'k-', data['decoder'])
+    series = data['dec'][str(args.param)]['iter']
+    xvals = range(len(series))
+    avg = sum([a1_ * a2_ for a1_, a2_ in zip(xvals, series)]) / sum(series)
+    plt.bar(xvals, series, label='Average=%g' % avg)
+    plt.xlabel('Number of iterations')
+    plt.gca().set_yticks([])
+    plot_common()
 
-    def filter_data(expr, comp=None):
-        ll = []
-        for name, item in data_list:
-            # print('filter:', name)
-            if expr(item):
-                log.info('Match: %s' % name)
-                ll.append(item)
-        if comp is not None: ll.sort(key=comp)
-        return ll
-
-    def extra_filter(it):
-        if 'max_iter' in it.keys() and args.max_iter is not None:
-            return int(it['max_iter']) == args.max_iter
-        # elif 'eps' in it.keys() and args.eps is not None:
-        #     return float(it['eps']) == args.eps
-        # elif 'mu' in it.keys() and args.mu is not None:
-        #     return float(it['mu']) == args.mu
-        else:
-            return True
-
-    def get_first(ll, rsn):
-        if len(ll) == 0:
-            log.error('No matching data found for: %s.' % rsn)
-            exit()
-        else:
-            return ll[0]
-
-    prefix_code = lambda ar_: ar_.get('prefix', '') + ar_.get('code', '')
-    prefix_or_code = lambda it, ar_: (it.get('code', '') == args.code or
-                                      it.get('prefix', '') == args.code or
-                                      it.get('code', '') == args.extra or
-                                      it.get('prefix', '') == args.extra)
-
-    if args.type == 'single':
-        chk = lambda it: it.get('code', '') == args.code and \
-                         it.get('decoder', '') == args.decoder[0] and \
-                         extra_filter(it)
-        data = get_first(filter_data(chk), 'single')
-        plot_(data[args.error], 'k-', data['decoder'])
-        title = def_title(args)
-        err_plt(args)
-
-    elif args.type == 'compare':
-        chk = lambda it: prefix_or_code(it, args) and \
-                         it.get('decoder', '') == args.decoder[0] and \
-                         extra_filter(it)
-        for data, style in zip(filter_data(chk), line_styles4):
-            plot_(data[args.error], style, prefix_code(data))
-        title = args.channel.upper() + ', %s decoder' % args.decoder[0]
-        err_plt(args)
-
-    elif args.type == 'comp_dec':
-        chk = lambda it: prefix_or_code(it, args) and \
-                         it.get('decoder', '') in args.decoder and \
-                         extra_filter(it)
-        filtered = filter_data(chk)
-        same_code = len(set([prefix_code(data) for data in filtered])) <= 1  # check if all are for same code
-        for data, style in zip(filtered, line_styles4):
-            decoder = data['decoder']
-            # leg = '%s-%s%s' % (decoder, prefix_code(data), '-' + str(data.get('layers')))
-            leg = decoder if same_code else '%s-%s' % (decoder, prefix_code(data))
-            plot_(data[args.error], style, leg)
-        title = def_title(args) if same_code else 'Comparison of decoders'
-        err_plt(args)
-
-    elif args.type == 'ensemble':
-        chk = lambda it: it.get('decoder', '') == args.decoder[0] and \
-                         re.compile('^' + args.code + '_[0-9]+$'). \
-                             match(it.get('code', ''))
-        log.info('Matching ensemble codes')
-        for data in filter_data(chk): plot_(data[args.error], 'r--', None)
-
-        chk_avg = lambda it: 'sources' in it.keys() and \
-                             it.get('prefix', '') == args.code and \
-                             it.get('decoder', '') == args.decoder[0]
-        log.info('Searching for average')
-        plot_(get_first(filter_data(chk_avg), 'average')[args.error], 'b-', 'Average')
-        title = def_title(args) + ' code ensemble' + ', %s decoder' % args.decoder[0]
-        err_plt(args)
-
-    elif args.type == 'max_iter':
-        chk = lambda it: it.get('code', '') == args.code and \
-                         it.get('decoder', '') == args.decoder[0] and \
-                         'max_iter' in it.keys()
-        for data, style in zip(filter_data(chk, lambda it: int(it['max_iter'])), line_styles):
-            decoder = data['decoder']
-            plot_(data[args.error], style, data['max_iter'])
-        title = def_title(args) + ', %s decoder' % args.decoder[0] + ', Effect of iterations cap'
-        err_plt(args)
-
-    elif args.type == 'hist_iter':
-        chk = lambda it: it.get('code', '') == args.code and \
-                         it.get('decoder', '') == args.decoder[0]
-        data = get_first(filter_data(chk), 'single')
+@reg_plot # depricated, discontinued after commit e9f545908d27fee157f8896fcdf40939022708d5
+def avg_iter(dl): # plot on average number of iterations
+    chk = lambda it: it.get('code', '') == args.code and \
+                     it.get('decoder', '') in args.decoder
+    for data in filter_data(dl, chk):
         # plot_(data[args.error], 'k-', data['decoder'])
-        series = data['dec'][str(args.param)]['iter']
-        xvals = range(len(series))
-        avg = sum([a1_ * a2_ for a1_, a2_ in zip(xvals, series)]) / sum(series)
-        plt.bar(xvals, series, label='Average=%g' % avg)
-        plt.xlabel('Number of iterations')
-        plt.gca().set_yticks([])
-        title = ''
+        params = sorted([param for param in data['dec'].keys()])
+        avgs = [data['dec'][param]['average'] for param in params]
+        plt.plot(params, avgs, label=data['decoder'])
+        plt.xlabel(x_labels[args.channel])
+        plt.ylabel('Average number of iterations')
+        plt.grid(True, which='both')
+    plot_common()
 
-    elif args.type == 'avg_iter':
-        chk = lambda it: it.get('code', '') == args.code and \
-                         it.get('decoder', '') in args.decoder
-        for data in filter_data(chk):
-            # plot_(data[args.error], 'k-', data['decoder'])
-            params = sorted([param for param in data['dec'].keys()])
-            avgs = [data['dec'][param]['average'] for param in params]
-            plt.plot(params, avgs, label=data['decoder'])
-            plt.xlabel(x_labels[args.channel])
-            plt.ylabel('Average number of iterations')
-            plt.grid(True, which='both')
-            title = ''
 
-    else:
-        return
-
+def plot_common(title=None):
     plt.legend(loc='best')
     if args.xlim is not None: plt.xlim(args.xlim)
     if args.ylim is not None: plt.ylim(args.ylim)
-    plt.title(title)
+    if title: plt.title(title)
     plt.margins(0)  # autoscale(tight=True)
-    if args.save is not None:
-        utils.make_dir_if_not_exists(args.plots_dir)
-        img_path = os.path.join(args.plots_dir, args.save)
-        plt.savefig(img_path, bbox_inches='tight')
-    if not args.silent: plt.show()
+    utils.make_dir_if_not_exists(args.plots_dir)
+    img_path = os.path.join(args.plots_dir, args.file_name)
+    ut.mpl.save_show_fig(args, plt, img_path)
 
-
-def err_plt(args):
-    plt.xlabel(x_labels[args.channel])
-    plt.ylabel(args.error.upper())
+def fmt_err():
+    xlab, ylab = x_labels[args.channel], args.error.upper()
+    ut.mpl.fmt_ax(plt.gca(), xlab, ylab, leg=1, grid=1, grid_kwargs={'which':'both'})
     plt.yscale('log')
-    plt.grid(True, which='both')
-
-
-def setup_parser():
-    # https://stackoverflow.com/questions/17073688/how-to-use-argparse-subparsers-correctly
-    parser = argparse.ArgumentParser()
-    parser.add_argument('channel', help='channel', choices=models.keys())
-    parser.add_argument('code', help='code name OR prefix')
-    parser.add_argument('decoder', help='decoders list', nargs='+', choices=utils.decoder_names)
-    parser.add_argument('type', help='plot type',
-                        choices=['single',  # plot of a code, channel, decoder
-                                 'comp_dec',  # compare multiple decoders
-                                 'ensemble',  # average and ensemble
-                                 'max_iter',  # compare iterations cap
-                                 'compare',  # compare with another
-                                 'hist_iter',  # histogram and stats of iteration count
-                                 'avg_iter',  # plot on average number of iterations
-                                 ])
-
-    parser.add_argument('--max-iter', help='filter out multiple matches', type=int)
-    parser.add_argument('--apprx', help='filter out multiple matches', type=int)
-    parser.add_argument('--param', help='param', type=float)
-    parser.add_argument('--mu', help='mu', type=float)
-    parser.add_argument('--eps', help='epsilon', type=float)
-    parser.add_argument('--extra', help='code names to compare with in [type=compare] plots')
-
-    parser.add_argument('--xlim', help='x-axis range', nargs=2, type=float)
-    parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
-    parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
-    parser.add_argument('--save', help='save as file name', type=str)
-    parser.add_argument('--silent', help='do not show plot output', action='store_true')
-    parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
-
-    return utils.bind_parser_common(parser)
 
 
 def main(args):
+    global matplotlib
     if args.agg: matplotlib.use('Agg')
     import matplotlib.pyplot
 
     global plt
     plt = matplotlib.pyplot
-    graph_(args)
+
+    args.and_kw.append(args.channel)
+    file_names = ut.file.filter_strings(args, utils.get_data_file_list(args.data_dir))
+    if not file_names: exit()
+    labels = ut.file.gen_unique_labels(file_names, tokens=['_', '__', '-', '.json'])
+    data_list = [DataRoot(fn, lb) for fn,lb in zip(file_names, labels)]
+    plot_reg.get(args.type)(data_list)
+
+
+def setup_parser():
+    # https://stackoverflow.com/questions/17073688/how-to-use-argparse-subparsers-correctly
+    parser = argparse.ArgumentParser()
+    parser.add_argument('channel', help='channel', choices=['bec', 'bsc', 'biawgn'])
+    parser.add_argument('--type', help='plot type', choices=plot_reg.keys(), default='plot_all')
+    parser.add_argument('--param', help='param', type=float)
+    parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
+
+    parser.add_argument('--linewidth', type=float, default=2)
+    parser.add_argument('--xlim', help='x-axis range', nargs=2, type=float)
+    parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
+
+    parser.add_argument('--legend_format', choices=legend_reg.keys())
+    parser.add_argument('--title', type=str)
+    parser.add_argument('--file_name', type=str)
+    parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
+
+    ut.mpl.bind_fig_save_args(parser)
+    ut.file.bind_filter_args(parser)
+    return utils.bind_parser_common(parser)
 
 
 if __name__ == "__main__":
-    utils.setup_console_logger()
-    main(setup_parser().parse_args())
+    args = setup_parser().parse_args()
+    print(vars(args))
+    main(args)

@@ -1,5 +1,5 @@
 Message passing based decoders for LDPC codes with Python/NumPy. Includes implementations of
-* **min-sum** (MSA) and **sum-product** (SPA) algorithms using **sparse matrices** (scipy.sparse)
+* **min-sum** (MSA) and **sum-product** (SPA) algorithms using **sparse matrices** (`scipy.sparse`)
 * **maximum-likedlood** (ML) and **linear-programming** (LP) decoders (only for short length codes like Hamming(7,4)) based on [Using Linear Programming to Decode Binary Linear Codes](https://people.eecs.berkeley.edu/~wainwrig/Papers/FelWaiKar05.pdf)
 * **ADMM** decoder based on [Decomposition Methods for Large Scale LP Decoding](https://arxiv.org/pdf/1204.0556.pdf)
 
@@ -34,32 +34,27 @@ See all pre-compupted results in [`codes`](data/codes), [`output`](data/output) 
   * Use the latter only on a **dedicated server** as it will take large amount of CPU.
   * See [`run_sims.sh`](../master/run_sims.sh) for other choices of `{CASE}`.
 
-* If running the simulations on [Niagara cluster](https://docs.computecanada.ca/wiki/Niagara), need to setup environment first by executing [`setup_env.sh`](../master/niagara/setup_env.sh).
+* If running the simulations on [Niagara cluster](https://docs.computecanada.ca/wiki/Niagara), need to first activate a Python environment with required packages installed.
 * Execute `./run_sims.sh PARA HMG --data-dir=$SCRATCH` to test if simulations run properly.
 * All simulations can be submitted for later excution on Niagara by using command `sbatch niagara/submit_job.sh`.
 
 
 ### Generating plots
-* Make directory `plots` in the root directory.
-* Execute `./plot_results.py HMG`  to view and save Hamming code related plots in PNG format.
-* Execute `./plot_results.py REG_ENS --ext=pdf` to view and save regular ensemble related plots in PDF format.
-* Execute `./plot_results.py HMG REG_ENS --ext=png --data-dir=./data --plots-dir=./plots --silent --error=ber` to silently save both Hamming code related and regular ensemble related bit-error-rate plots.
+* Execute `./plot_results.py HMG --ext=png --data-dir=./data --plots-dir=./plots --save --silent --error=ber` to silently save Hamming code related plots.
+* Replace `HMG` with `HMG REG_ENS` to save both Hamming code and regular ensemble related plots.
 * If running on the Niagara cluster execute `./plot_results.py HMG REG_ENS --data-dir=$SCRATCH --plots-dir=$SCRATCH --silent --agg` to use the proper back-end for `matplotlib`.
 
 
-## Specific commands
+## Individual commands
 
 ### Simulations
 * `python src/main.py bec 1200_3_6_rand_ldpc_1 SPA --codeword=1 --console --params .5 .475 .45 .425 .4 .375 .35 .325 .3`
 * `python src/main.py biawgn 7_4_hamming SPA --codeword=1 --params .01 .05 .1 .5 1 2 4 6 --console`
 * See [`run_sims.sh`](../master/run_sims.sh) and [`simulations.py`](../master/simulations.py) for more.
 
-### Ensemble average
-* `python src/stats.py bec 1200_3_6_rand_ldpc SPA`
-
 ### Plots
-* `python src/graph.py bec 1200_3_6_ldpc SPA single --error ber`
-* `python src/graph.py bsc 7_4_hamming SPA ML comp_dec --error wer`
+* `python src/graph.py bec --and 1200_3_6_ldpc SPA --error ber`
+* `python src/graph.py bsc --and 7_4_hamming --or_ SPA ML --error wer`
 * See [`plot_results.py`](../master/plot_results.py) for more.
 
 
