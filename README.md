@@ -36,7 +36,8 @@ See all pre-compupted results in [`codes`](data/codes), [`output`](data/output) 
 
 * If running the simulations on [Niagara cluster](https://docs.computecanada.ca/wiki/Niagara), need to first activate a Python environment with required packages installed.
 * Execute `./run_sims.sh PARA HMG --data-dir=$SCRATCH` to test if simulations run properly.
-* All simulations can be submitted for later excution on Niagara by using command `sbatch niagara/submit_job.sh`.
+* Run all simulations in parallel within one node:
+`submitjob single -e "~/projects/decoders/run_sims.sh PARA HMG MAR REG_BAD REG_ENS IREG_ENS --console" -d time=11:59:00 -D email`
 
 
 ### Generating plots

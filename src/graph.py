@@ -1,3 +1,4 @@
+import numpy as np
 import matplotlib
 import argparse
 import os
@@ -42,16 +43,23 @@ def plot_(pairs, label, style=None):
 
 
 plot_reg = ut.Registry()
-reg_plot = plot_reg.reg
+def reg_plot(help_str):
+    def inner(func):
+        func.help_str = help_str
+        plot_reg.put(func.__name__, func)
+        return func
+    return inner
 
-@reg_plot
-def plot_all(dl): # plot all files
+
+@reg_plot('plots of all available data')
+def plot_all(dl):
     for r in dl: plot_(r.data[args.error], r.get_label())
     fmt_err()
-    plot_common(args.title)
+    plot_common()
 
-@reg_plot
-def ensemble(dl): # average and ensemble
+
+@reg_plot('ensemble of codes and their average')
+def ensemble(dl):
     pot = {}
     for r in dl:
         for point,val in r.data[args.error].items():
@@ -64,43 +72,45 @@ def ensemble(dl): # average and ensemble
     for r in dl: plot_(r.data[args.error], None, 'r--')
     plot_(pot, 'Average', 'b-')
     fmt_err()
-    title = 'Code ensemble' # + ', %s decoder' % args.decoder[0]
-    plot_common(title)
+    plot_common('Performance of code ensemble')
 
 
-@reg_plot # depricated, discontinued after commit e9f545908d27fee157f8896fcdf40939022708d5
-def hist_iter(dl): # histogram and stats of iteration count
-    chk = lambda it: it.get('code', '') == args.code and \
-                     it.get('decoder', '') == args.decoder[0]
-    data = get_first(filter_data(dl, chk), 'single')
-    # plot_(data[args.error], 'k-', data['decoder'])
-    series = data['dec'][str(args.param)]['iter']
-    xvals = range(len(series))
-    avg = sum([a1_ * a2_ for a1_, a2_ in zip(xvals, series)]) / sum(series)
-    plt.bar(xvals, series, label='Average=%g' % avg)
-    plt.xlabel('Number of iterations')
-    plt.gca().set_yticks([])
-    plot_common()
+@reg_plot('histogram of iteration count for e.g. ADMM decoder')
+def hist_iter(dl):
+    ax = plt.gca()
+    if args.param is None: raise Exception('Parameter is None!')
+    xmin, xmax = 1e10, 0
+    for r in dl:
+        series = np.array(r.data['dec'][str(args.param)]['iter'])
+        xvals = range(len(series))
+        avg = r.data['dec'][str(args.param)]['average']
+        ax.bar(xvals, series, label='Average=%g'%avg)
+        nzero = series.nonzero()[0]
+        xmin = min(xmin, xvals[nzero[0]])
+        xmax = max(xmax, xvals[nzero[-1]])
+    ax.set_yticks([])
+    diff = max(3, int((xmax-xmin)*0.01))
+    ax.set_xlim(max(0, xmin-diff), xmax+diff)
+    ut.mpl.fmt_ax(ax, 'Number of iterations', 'Frequency', leg=1, grid=1)
+    plot_common('Iteration count histogram')
 
-@reg_plot # depricated, discontinued after commit e9f545908d27fee157f8896fcdf40939022708d5
-def avg_iter(dl): # plot on average number of iterations
-    chk = lambda it: it.get('code', '') == args.code and \
-                     it.get('decoder', '') in args.decoder
-    for data in filter_data(dl, chk):
-        # plot_(data[args.error], 'k-', data['decoder'])
-        params = sorted([param for param in data['dec'].keys()])
-        avgs = [data['dec'][param]['average'] for param in params]
-        plt.plot(params, avgs, label=data['decoder'])
-        plt.xlabel(x_labels[args.channel])
-        plt.ylabel('Average number of iterations')
-        plt.grid(True, which='both')
-    plot_common()
+
+@reg_plot('average iteration count for e.g. ADMM decoder')
+def avg_iter(dl):
+    for r in dl:
+        dec = r.data['dec']
+        pot = {point:dec[point]['average'] for point in dec}
+        plot_(pot, r.get_label())
+    xlab, ylab = x_labels[args.channel], 'Average number of iterations'
+    ut.mpl.fmt_ax(plt.gca(), xlab, ylab, leg=1, grid=1)
+    plot_common('Average iteration count')
 
 
 def plot_common(title=None):
     plt.legend(loc='best')
     if args.xlim is not None: plt.xlim(args.xlim)
     if args.ylim is not None: plt.ylim(args.ylim)
+    if not args.title is None: title = args.title
     if title: plt.title(title)
     plt.margins(0)  # autoscale(tight=True)
     utils.make_dir_if_not_exists(args.plots_dir)
@@ -121,18 +131,17 @@ def main(args):
     global plt
     plt = matplotlib.pyplot
 
-    args.and_kw.append(args.channel)
     file_names = ut.file.filter_strings(args, utils.get_data_file_list(args.data_dir))
     if not file_names: exit()
     labels = ut.file.gen_unique_labels(file_names, tokens=['_', '__', '-', '.json'])
     data_list = [DataRoot(fn, lb) for fn,lb in zip(file_names, labels)]
+    args.channel = data_list[0].data['channel']
     plot_reg.get(args.type)(data_list)
 
 
 def setup_parser():
     # https://stackoverflow.com/questions/17073688/how-to-use-argparse-subparsers-correctly
     parser = argparse.ArgumentParser()
-    parser.add_argument('channel', help='channel', choices=['bec', 'bsc', 'biawgn'])
     parser.add_argument('--type', help='plot type', choices=plot_reg.keys(), default='plot_all')
     parser.add_argument('--param', help='param', type=float)
     parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
@@ -143,7 +152,7 @@ def setup_parser():
 
     parser.add_argument('--legend_format', choices=legend_reg.keys())
     parser.add_argument('--title', type=str)
-    parser.add_argument('--file_name', type=str)
+    parser.add_argument('--file_name', type=str, default='graph')
     parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
 
     ut.mpl.bind_fig_save_args(parser)
@@ -151,7 +160,7 @@ def setup_parser():
     return utils.bind_parser_common(parser)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     args = setup_parser().parse_args()
     print(vars(args))
     main(args)
