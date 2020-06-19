@@ -57,6 +57,7 @@ def main():
     if args.console:
         utils.setup_console_logger(log_level)
     else:
+        utils.make_dir_if_not_exists(args.data_dir)
         utils.setup_file_logger(args.data_dir, 'test', log_level)
 
     print(vars(args))

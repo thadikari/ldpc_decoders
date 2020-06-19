@@ -21,22 +21,24 @@ strl = lambda ll: (str(it_) for it_ in ll)
 def setup_parser(code_names, channel_names, decoder_names):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('channel', help='channel', choices=channel_names)
-    parser.add_argument('code', help='code name', choices=code_names)
-    parser.add_argument('decoder', help='decoder', choices=decoder_names)
+    parser.add_argument('channel', help='channel type', choices=channel_names)
+    codehelp = 'code for channel coding, includes codes specified in %s. Set env variable %s to change the directory.'%(codes.file_codes_dir, codes.file_codes_dir_string)
+    parser.add_argument('code', help=codehelp, choices=code_names)
+    parser.add_argument('decoder', help='decoder type', choices=decoder_names)
 
-    parser.add_argument('--codeword', help='-1:random from cb, 0:all-zero, 1:all-ones', default=0, type=int,
-                        choices=[-1, 0, 1])
+    cwhelp = 'transmitted codeword [0:all-zero, 1:all-ones, -1:random from code book (works only with small codes)]'
+    parser.add_argument('--codeword', help=cwhelp, default=0, type=int, choices=[-1, 0, 1])
     parser.add_argument('--min-wec', help='min word errors to accumulate', default=100, type=int)
-    parser.add_argument('--params', nargs='+', type=float, default=[.1, .01])
+    parser.add_argument('--params', help='channel condition, e.g. erasure probability for erasure channel', nargs='+', type=float, default=[.1, .01])
 
-    parser.add_argument('--max-iter', help='max iterations in iterative decoders', default=10, type=int)
-    parser.add_argument('--mu', help='mu', default=3., type=float)
-    parser.add_argument('--eps', help='epsilon', default=1e-5, type=float)
-    parser.add_argument('--allow-pseudo', help='pseudo cw allowed in LP, ADMM, ADMMA', action='store_true')
-    parser.add_argument('--layers', help='neural net layers', nargs='+', default=[100, 100], type=int)
-    parser.add_argument('--train', help='train ADMMA using ADMM', action='store_true')
-    parser.add_argument('--apprx', help='max iterations using apprx method in ADMMA', default=-1, type=int)
+    parser.add_argument('--max-iter', help='max iteration count for iterative decoders', default=10, type=int)
+    parser.add_argument('--mu', help='mu for ADMM decoder', default=3., type=float)
+    parser.add_argument('--eps', help='epsilon for ADMM decoder', default=1e-5, type=float)
+    pseuhelp = 'pseudo codewords allowed in LP, ADMM, ADMMA'
+    parser.add_argument('--allow-pseudo', help=pseuhelp, action='store_true')
+    parser.add_argument('--layers', help='neural net layers for ADMMA', nargs='+', default=[100, 100], type=int)
+    parser.add_argument('--train', help='train ADMMA using ADMM or test ADMMA', action='store_true')
+    parser.add_argument('--apprx', help='max iterations using approximate method in ADMMA', default=-1, type=int)
 
     parser.add_argument('--log-freq', help='log frequency in seconds', default=5., type=float)
     return bind_parser_common(parser)
@@ -44,11 +46,12 @@ def setup_parser(code_names, channel_names, decoder_names):
 
 def bind_parser_common(parser):
     _dir = ut.file.resolve_data_dir_os('decoders')
-    parser.add_argument('--data-dir', help='data directory', default=os.path.join(_dir, 'data'))
-    parser.add_argument('--cache-dir', help='cache directory', default=os.path.join(_dir, 'cache'))
-    parser.add_argument('--plots-dir', help='save location', default=os.path.join(_dir, 'plots'))
+    path_ = lambda p_: os.path.abspath(os.path.join(_dir, p_))
+    parser.add_argument('--data_dir', help='location for writing simulation output', default=path_('data'))
+    parser.add_argument('--cache_dir', help='cache directory for ADMMA', default=path_('cache'))
+    parser.add_argument('--plots_dir', help='save location of plots', default=path_('plots'))
     parser.add_argument('--debug', help='logs debug info', action='store_true')
-    parser.add_argument('--console', help='prints log onto console', action='store_true')
+    parser.add_argument('--console', help='if true prints log onto console, otherwise write to a file', action='store_true')
     return parser
 
 
@@ -108,7 +111,8 @@ def load_json(file_path):
 
 def make_dir_if_not_exists(dir_path):
     if not os.path.exists(dir_path):
-        os.makedirs(dir_path)
+        try: os.makedirs(dir_path)
+        except: pass
 
 
 class Saver:

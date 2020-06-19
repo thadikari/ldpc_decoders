@@ -14,8 +14,8 @@ ut.mpl.init(font_size=12, legend_font_size=12, tick_size=12)
 legend_reg = ut.Registry()
 r_ = legend_reg.put
 r_('decoder', lambda d_: d_['decoder'])
-r_('chl_dec', lambda d_: d_['channel'].upper() + ', %s decoder' % d_['decoder'])
-r_('chl_code', lambda d_: d_['channel'].upper() + ', %s code' % d_['code'])
+r_('channel_decoder', lambda d_: d_['channel'].upper() + ', %s decoder' % d_['decoder'])
+r_('channel_code', lambda d_: d_['channel'].upper() + ', %s code' % d_['code'])
 
 x_labels = {'bsc': 'Crossover probability',
             'bec': 'Erasure probability',
@@ -25,7 +25,9 @@ x_labels = {'bsc': 'Crossover probability',
 class DataRoot:
     def __init__(self, file_name, label):
         self.label = label
+        self.file_name = file_name
         self.data = utils.load_json(os.path.join(args.data_dir, file_name))
+        if self.data is None: print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>', self.file_name)
     def get_label(self):
         if args.legend_format is None:
             return self.label
@@ -58,8 +60,7 @@ def plot_all(dl):
     plot_common()
 
 
-@reg_plot('ensemble of codes and their average')
-def ensemble(dl):
+def comp_average(dl):
     pot = {}
     for r in dl:
         for point,val in r.data[args.error].items():
@@ -68,11 +69,31 @@ def ensemble(dl):
     for point in pot:
         vals = pot[point]
         pot[point] = sum(vals) / float(len(vals))
+    return pot
 
+@reg_plot('ensemble of codes and their average')
+def ensemble(dl):
     for r in dl: plot_(r.data[args.error], None, 'r--')
-    plot_(pot, 'Average', 'b-')
+    plot_(comp_average(dl), 'Average', 'b-')
     fmt_err()
     plot_common('Performance of code ensemble')
+
+
+@reg_plot('compute average of regex matching files')
+def regex_average(dl):
+    used_l = []
+    for rg in args.group_regex:
+        new_dl = []
+        for r in dl:
+            if re.search(rg[0], r.file_name):
+                new_dl.append(r)
+                used_l.append(r)
+        print('Regex group: %s'%rg, *[r.file_name for r in new_dl], sep='\n')
+        plot_(comp_average(new_dl), rg[1])
+    rest_dl = list(set(dl) - set(used_l))
+    for r in rest_dl: plot_(r.data[args.error], r.get_label())
+    fmt_err()
+    plot_common()
 
 
 @reg_plot('histogram of iteration count for e.g. ADMM decoder')
@@ -135,6 +156,7 @@ def main(args):
     if not file_names: exit()
     labels = ut.file.gen_unique_labels(file_names, tokens=['_', '__', '-', '.json'])
     data_list = [DataRoot(fn, lb) for fn,lb in zip(file_names, labels)]
+    data_list.sort(key=lambda it: ut.file.naturalkey(it.get_label()))
     args.channel = data_list[0].data['channel']
     plot_reg.get(args.type)(data_list)
 
@@ -142,17 +164,18 @@ def main(args):
 def setup_parser():
     # https://stackoverflow.com/questions/17073688/how-to-use-argparse-subparsers-correctly
     parser = argparse.ArgumentParser()
-    parser.add_argument('--type', help='plot type', choices=plot_reg.keys(), default='plot_all')
-    parser.add_argument('--param', help='param', type=float)
-    parser.add_argument('--error', help='which error rate', default='ber', choices=['wer', 'ber'])
+    parser.add_argument('--type', help='type of the graph', choices=plot_reg.keys(), default='plot_all')
+    parser.add_argument('--param', help='parameter used in hist_iter graph', type=float)
+    parser.add_argument('--error', help='error rate metric', default='ber', choices=['wer', 'ber'])
+    parser.add_argument('--group_regex', nargs=2, action='append', help='if --type regex_average, matches a regex to file names and only plot their average. format: [<regex>, <legend name>]')
 
     parser.add_argument('--linewidth', type=float, default=2)
     parser.add_argument('--xlim', help='x-axis range', nargs=2, type=float)
     parser.add_argument('--ylim', help='y-axis range', nargs=2, type=float)
 
-    parser.add_argument('--legend_format', choices=legend_reg.keys())
-    parser.add_argument('--title', type=str)
-    parser.add_argument('--file_name', type=str, default='graph')
+    parser.add_argument('--legend_format', help='format of legend entries', choices=legend_reg.keys())
+    parser.add_argument('--title', help='graph title', type=str)
+    parser.add_argument('--file_name', help='save name', type=str, default='graph')
     parser.add_argument('--agg', help='set matplotlib backend to Agg', action='store_true')
 
     ut.mpl.bind_fig_save_args(parser)

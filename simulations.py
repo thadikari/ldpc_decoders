@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 import argparse
+import src.utilities.misc
 
-global args_
 
 prt = lambda ss: print(' '.join(ss + args_.arg), flush=True)
 exc_cases = lambda cases: [prt(case) for case in cases]
@@ -11,7 +11,7 @@ exc_ens = lambda prefix, count: [exc_def_cases('%s_%d' % (prefix, i + 1)) for i 
 p_ = lambda a__: '--params ' + a__
 cw_ = lambda a__: '--codeword=' + str(a__)
 mi_ = lambda a__: '--max-iter=' + str(a__)
-mw_ = lambda a__: '--min-wec=' + str(a__)
+mw_ = lambda a__: '--min-wec=' + str(500)
 sp_ = lambda ll: p_(' '.join(['%g' % val for val in ll]))
 stp = lambda init, step, count: [init + cnt * step for cnt in range(count)]
 
@@ -39,45 +39,50 @@ def exc_def_cases(code, mi=10, mw=100):
     exc_cases(cases)
 
 
-def main(args):
-    global args_
-    args_ = args
-    for case in args.case: switch(case)
+def main():
+    for case in args_.case: all_cases.get(case)()
 
 
-def switch(case):
-    if case == 'HMG':  # all hamming code sims
-        p_bec = '.5 .4 .3 .2 .1 .08 .06 .04 .02'
-        p_bsc = p_bec + ' .25 .15 .01 .008 .006 .004 .002'
+all_cases = src.utilities.misc.Registry()
+reg_case = all_cases.reg
 
-        decs_bec = ['ML', 'LP', 'SPA', 'ADMM']
-        decs_def = ['ML', 'LP', 'SPA', 'MSA', 'ADMM']
+@reg_case
+def HMG():  # all hamming code sims
+    p_bec = '.5 .4 .3 .2 .1 .08 .06 .04 .02'
+    p_bsc = p_bec + ' .25 .15 .01 .008 .006 .004 .002'
 
-        code, config = '7_4_hamming', [cw_(1), mw_(300)]
-        cases = [['bec', code, dec, p_(p_bec)] + config for dec in decs_bec] + \
-                [['bsc', code, dec, p_(p_bsc)] + config for dec in decs_def] + \
-                [['biawgn', code, dec, sp_(stp(2, .5, 11))] + config for dec in decs_def]
-        exc_cases(cases)
+    decs_bec = ['ML', 'LP', 'SPA', 'ADMM']
+    decs_def = ['ML', 'LP', 'SPA', 'MSA', 'ADMM']
 
-    elif case == 'MAR':  # margulis code sims
-        code, config = 'margulis', [cw_(1), mw_(100)]
-        cases = [
-            ['bec', code, 'ADMM', p_('.5 .475 .45 .425 .4 .375 .35 .34 .33 .325 .32 .31 .3')] + config,
-            ['bsc', code, 'ADMM', p_('.1 .09 .08 .07 .06 .05 .04')] + config,
-            ['biawgn', code, 'ADMM', p_('.5 .75 1. 1.25 1.5 1.75 2. 2.25 2.5 2.75 3.0')] + config
-        ]
-        exc_cases(cases)
-        exc_def_cases(code)
+    code, config = '7_4_hamming', [cw_(1), mw_(300)]
+    cases = [['bec', code, dec, p_(p_bec)] + config for dec in decs_bec] + \
+            [['bsc', code, dec, p_(p_bsc)] + config for dec in decs_def] + \
+            [['biawgn', code, dec, sp_(stp(2, .5, 11))] + config for dec in decs_def]
+    exc_cases(cases)
 
-    elif case == 'REG_BAD':
-        exc_def_cases('1200_3_6_ldpc')
-        for mi in [0, 1, 2, 3, 6, 40, 100]: exc_def_cases('1200_3_6_ldpc', mi)
+@reg_case
+def MAR():  # margulis code sims
+    code, config = 'margulis', [cw_(1), mw_(100)]
+    cases = [
+        ['bec', code, 'ADMM', p_('.5 .475 .45 .425 .4 .375 .35 .34 .33 .325 .32 .31 .3')] + config,
+        ['bsc', code, 'ADMM', p_('.1 .09 .08 .07 .06 .05 .04')] + config,
+        ['biawgn', code, 'ADMM', p_('.5 .75 1. 1.25 1.5 1.75 2. 2.25 2.5 2.75 3.0')] + config
+    ]
+    exc_cases(cases)
+    exc_def_cases(code)
 
-    elif case == 'REG_ENS':
-        exc_ens('1200_3_6_rand_ldpc', 10)
+@reg_case
+def REG_BAD():
+    exc_def_cases('1200_3_6_ldpc')
+    for mi in [0, 1, 2, 3, 6, 40, 100]: exc_def_cases('1200_3_6_ldpc', mi)
 
-    elif case == 'IREG_ENS':
-        exc_ens('1200_rho_x5_rand_ldpc', 10)
+@reg_case
+def REG_ENS():
+    exc_ens('1200_3_6_rand_ldpc', 10)
+
+@reg_case
+def IREG_ENS():
+    exc_ens('1200_rho_x5_rand_ldpc', 10)
 
 
 def setup_parser():
@@ -88,4 +93,5 @@ def setup_parser():
 
 
 if __name__ == '__main__':
-    main(setup_parser().parse_args())
+    args_ = setup_parser().parse_args()
+    main()

@@ -65,7 +65,9 @@ codes = {'4_2_test': (np.array([[1, 1, 1, 0, 0],  # gen_mtx
                          )
          }
 
-file_codes_dir = os.path.join('.', 'data', 'codes')
+file_codes_dir_string = 'FILE_CODES_DIR'
+file_codes_dir = os.environ.get(file_codes_dir_string, os.path.join('data', 'codes'))
+file_codes_dir = os.path.abspath(file_codes_dir)
 
 
 def get_file_code_map():
