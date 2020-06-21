@@ -11,7 +11,7 @@ exc_ens = lambda prefix, count: [exc_def_cases('%s_%d' % (prefix, i + 1)) for i 
 p_ = lambda a__: '--params ' + a__
 cw_ = lambda a__: '--codeword=' + str(a__)
 mi_ = lambda a__: '--max-iter=' + str(a__)
-mw_ = lambda a__: '--min-wec=' + str(500)
+mw_ = lambda a__: '--min-wec=' + str(a__)
 sp_ = lambda ll: p_(' '.join(['%g' % val for val in ll]))
 stp = lambda init, step, count: [init + cnt * step for cnt in range(count)]
 
