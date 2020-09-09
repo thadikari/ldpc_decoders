@@ -30,6 +30,9 @@ See all pre-compupted results in [`codes`](data/codes), [`output`](data/output) 
 
 ## Starting from scratch
 
+When cloning the repository for the first time, initialize the `src/utilities` sub-module (this is another [git repository](https://github.com/thadikari/utilities/)) by executing 
+`git submodule update --init --recursive` as described in [this](https://stackoverflow.com/questions/10168449/git-update-submodules-recursively) stackoverflow question.
+
 ### Generating data
 * Simulation output written to `~/scratch/decoders` by default.
 * Execute [`src/main.py`](src/main.py) with following or equivalent arguments:
