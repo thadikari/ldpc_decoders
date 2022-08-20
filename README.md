@@ -1,4 +1,4 @@
-# Python/NumPy implementation of a few iterative decoders for LDPC codes.
+# Python - NumPy (with `scipy.sparse`) implementation of a few iterative decoders (including Belief Propagation) for LDPC codes.
 Includes implementations of
 * Message passing (__Belief Propagation__) based **min-sum** (MSA) and **sum-product** (SPA) algorithms using **sparse matrices** (`scipy.sparse`)
 * **maximum-likedlood** (ML) and **linear-programming** (LP) decoders (only for short length codes like Hamming(7,4)) based on [Using Linear Programming to Decode Binary Linear Codes](https://people.eecs.berkeley.edu/~wainwrig/Papers/FelWaiKar05.pdf)
